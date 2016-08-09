@@ -18,6 +18,7 @@
 import sqlite3 as lite
 import sys, getopt
 
+script_details = 'read-codebook.py (2016-08-09)'
 db_name_categories = 'categories'
 db_name_entries = 'entries'
 db_name_fields = 'fields'
@@ -53,18 +54,21 @@ def menu(title, items):
 	return user_selection
 
 def main(argv):
-	help_message = 'read-codebook.py -i <inputfile>'
+	help_message = './read-codebook.py -i <inputfile>'
 	input_pathfile = ''
 
 	try:
-		opts, args = getopt.getopt(argv,'hi:',['input-file='])
+		opts, args = getopt.getopt(argv,'hvi:',['help','version','input-file='])
 	except getopt.GetoptError:
 		print(help_message)
 		sys.exit(2)
 
 	for opt, arg in opts:
-		if opt == '-h':
+		if opt in ('-h', '--help'):
 			print(help_message)
+			sys.exit()
+		elif opt in ('-v', '--version'):
+			print(script_details)
 			sys.exit()
 		elif opt in ('-i', '--input-file'):
 			input_pathfile = arg
@@ -72,6 +76,8 @@ def main(argv):
 	if not input_pathfile:
 		print(help_message)
 		sys.exit(1)
+	
+	print(script_details)
 	
 	con = lite.connect(input_pathfile)
 	
