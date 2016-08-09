@@ -20,7 +20,7 @@ import sys
 import getopt
 import sqlite3 as lite
 
-script_details = 'read-codebook.py (2016-08-09)'
+script_details = 'read-codebook.py (2016-08-10)'
 db_name_categories = 'categories'
 db_name_entries = 'entries'
 db_name_fields = 'fields'
@@ -44,7 +44,11 @@ def menu(title, records, mode):
 			acc += 1
 			print(" ({}) {}".format(acc, record[db_col_name]))
 
-		# create prompt_tail based on 'mode'
+		if acc > 0:
+			prompt_head = '1 - ' + str(acc) + ' or '
+		else:
+			prompt_head = ''
+			
 		if mode == 'B':
 			print(" (B) <Back>")
 			print()
@@ -59,7 +63,7 @@ def menu(title, records, mode):
 			print()
 			prompt_tail = 'Q'
 
-		user_selection = input(' Select (1 - ' + str(acc) + ' or ' + prompt_tail + '): ')
+		user_selection = input(' Select (' + prompt_head + prompt_tail + '): ')
 
 		# choose permissible actions based on 'mode'
 		if not user_selection.isdigit():
@@ -84,7 +88,34 @@ def menu(title, records, mode):
 			
 	return user_selection
 
+def write_entry_to_file(db_entry):
+	# yes, ugly, but hopefully catches the important ones ... I'll prettify it later
+	safername = db_entry.replace(' ', '_')
+	safername = safername.replace('/', '_')
+	safername = safername.replace('\\', '_')
+	safername = safername.replace('?', '_')
+	outpathfile = safername + '.txt'
+
+	print()
+	if not os.path.exists(outpathfile):
+		with open(outpathfile, 'w') as text_file:
+			for field in db_tab_fields:
+				if field[db_col_type_id]:
+					for field_types in db_tab_types:
+						if field_types[db_col_id] == field[db_col_type_id]:
+							text_file.write("{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value]))
+							break
+				else:
+						# appears that notes don't have a field type ID
+						text_file.write(field[db_col_value] + '\n')
+		print(" * entry written to file *")
+	else:
+		print(" ! could not write as file already exists !")
+	
+	return
+	
 def main(argv):
+	global db_tab_types, db_tab_fields
 	help_message = './read-codebook.py -i <inputfile>'
 	input_pathfile = ''
 
@@ -170,30 +201,7 @@ def main(argv):
 							user_selection = menu('', '', 'W')
 
 							if user_selection == -1:
-								# yes, ugly, but hopefully catches the important ones ... I'll prettify it later
-								safername = db_entry.replace(' ', '_')
-								safername = safername.replace('/', '_')
-								safername = safername.replace('\\', '_')
-								safername = safername.replace('?', '_')
-								outpathfile = safername + '.txt'
-
-								print()
-								if not os.path.exists(outpathfile):
-									with open(outpathfile, 'w') as text_file:
-										for field in db_tab_fields:
-											if field[db_col_type_id]:
-												for field_types in db_tab_types:
-													if field_types[db_col_id] == field[db_col_type_id]:
-														text_file.write("{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value]))
-														break
-											else:
-													# appears that notes don't have a field type ID
-													text_file.write(field[db_col_value] + '\n')
-
-									print(" * entry written to file *")
-								else:
-									print(" ! could not write as file already exists !")
-								
+								write_entry_to_file(db_entry)
 							elif user_selection == 0:
 								break
 
