@@ -52,4 +52,3 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 - (2016-08-09) - need to loop back after checking out selected entry.
 - (2016-08-09) - perform decryption on original strip.db file.
 - (2016-08-09) - option to save selected entry to text file.
-- 
