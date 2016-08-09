@@ -30,7 +30,7 @@ db_col_name = 'name'
 db_col_value = 'value'
 db_col_type_id = 'type_id'
 
-def menu(title, items):
+def menu(title, items, option):
 	while True:
 		print()
 		print("*** {} ***".format(title))
@@ -40,13 +40,20 @@ def menu(title, items):
 			acc += 1
 			print(" ({}) {}".format(acc, record[db_col_name]))
 
-		print(" (Q) quit")
-		print()
+		if option == 'B':
+			print(" (B) <Back>")
+			print()
+			prompt = 'Select ( 1 - ' + str(acc) + ' or B ): '
+		else:
+			print(" (Q) <Quit>")
+			print()
+			prompt = 'Select ( 1 - ' + str(acc) + ' or Q ): '
 
-		user_selection = input("Select ( 1 - " + str(acc) + " or Q ): ")
+		user_selection = input(prompt)
 
 		if not user_selection.isdigit():
-			sys.exit()
+			user_selection = 0
+			break
 			
 		if int(user_selection) <= acc:
 			break
@@ -93,35 +100,45 @@ def main(argv):
 		cur.execute('SELECT * FROM ' + db_name_categories)
 		db_tab_categories = cur.fetchall()
 
-		# query user
-		user_selection = menu(db_name_categories, db_tab_categories)
-		row = db_tab_categories[int(user_selection) - 1]
-		selected_category_id = row[db_col_id]
-		db_category = row[db_col_name]
-		
-		cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_category_id + ' = \"' + selected_category_id + '\"')
-		db_tab_entry = cur.fetchall()
-		
-		# query user
-		user_selection = menu(db_category, db_tab_entry)
-		row = db_tab_entry[int(user_selection) - 1]
-		selected_entry_id = row[db_col_id]
-		db_entry = row[db_col_name]
-		
-		cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + selected_entry_id + '\"')
-		db_tab_fields = cur.fetchall()
+		while True:
+			# query user
+			user_selection = menu(db_name_categories, db_tab_categories, 'Q')
 
-		print()
-
-		for field in db_tab_fields:
-			if field[db_col_type_id]:
-				for field_types in db_tab_types:
-					if field_types[db_col_id] == field[db_col_type_id]:
-						print(" {:30}: {}".format(field_types[db_col_name], field[db_col_value]))
-						break
+			if user_selection == 0:
+				break
 			else:
-					# appears that notes don't have a field type ID
-					print("{}".format(field[db_col_value]))
+				row = db_tab_categories[int(user_selection) - 1]
+				selected_category_id = row[db_col_id]
+				db_category = row[db_col_name]
+				
+				cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_category_id + ' = \"' + selected_category_id + '\"')
+				db_tab_entry = cur.fetchall()
+				
+				while True:
+					# query user
+					user_selection = menu(db_category, db_tab_entry, 'B')
+
+					if user_selection == 0:
+						break
+					else:
+						row = db_tab_entry[int(user_selection) - 1]
+						selected_entry_id = row[db_col_id]
+						db_entry = row[db_col_name]
+						
+						cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + selected_entry_id + '\"')
+						db_tab_fields = cur.fetchall()
+
+						print()
+
+						for field in db_tab_fields:
+							if field[db_col_type_id]:
+								for field_types in db_tab_types:
+									if field_types[db_col_id] == field[db_col_type_id]:
+										print(" {:30}: {}".format(field_types[db_col_name], field[db_col_value]))
+										break
+							else:
+									# appears that notes don't have a field type ID
+									print("{}".format(field[db_col_value]))
 
 
 if __name__ == '__main__':

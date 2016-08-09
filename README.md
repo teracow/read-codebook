@@ -40,7 +40,7 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-09) - None.
+- (2016-08-09) - None (but I'm sure they're in there ... somewhere).
 
 ---
 ###**Work-in-Progress:**
@@ -51,5 +51,4 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ###**To-Do List:**
 
 - (2016-08-09) - option to save selected entry to text file.
-- (2016-08-09) - need to loop back after checking out selected entry.
 - (2016-08-09) - perform decryption on original strip.db file.
