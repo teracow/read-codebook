@@ -30,33 +30,55 @@ db_col_name = 'name'
 db_col_value = 'value'
 db_col_type_id = 'type_id'
 
-def menu(title, items, option):
+def menu(title, records, mode):
 	while True:
 		print()
-		print("*** {} ***".format(title))
+		
+		if title:
+			print("*** {} ***".format(title))
 
 		acc = 0
-		for record in items:
+		for record in records:
 			acc += 1
 			print(" ({}) {}".format(acc, record[db_col_name]))
 
-		if option == 'B':
+		# create prompt based on 'mode'
+		if mode == 'B':
 			print(" (B) <Back>")
 			print()
-			prompt = 'Select ( 1 - ' + str(acc) + ' or B ): '
+			prompt = 'Select (1 - ' + str(acc) + ' or B): '
+		elif mode == 'W':
+			print(" (W) <Write this to a file>")
+			print(" (B) <Back>")
+			print()
+			prompt = 'Select (1 - ' + str(acc) + ' or W,B): '
 		else:
 			print(" (Q) <Quit>")
 			print()
-			prompt = 'Select ( 1 - ' + str(acc) + ' or Q ): '
+			prompt = 'Select (1 - ' + str(acc) + ' or Q): '
 
 		user_selection = input(prompt)
 
+		# choose permissible actions based on 'mode'
 		if not user_selection.isdigit():
-			user_selection = 0
-			break
-			
-		if int(user_selection) <= acc:
-			break
+			if mode == 'B':
+				if user_selection == 'B' or user_selection == 'b':
+					user_selection = 0
+					break
+			elif mode == 'W':
+				if user_selection == 'W' or user_selection == 'w':
+					user_selection = -1
+					break
+				elif user_selection == 'B' or user_selection == 'b':
+					user_selection = 0
+					break
+			elif mode == 'Q':
+				if user_selection == 'Q' or user_selection == 'q':
+					user_selection = 0
+					break
+		else:
+			if int(user_selection) > 0 and int(user_selection) <= acc:
+				break
 			
 	return user_selection
 
@@ -129,6 +151,7 @@ def main(argv):
 						db_tab_fields = cur.fetchall()
 
 						print()
+						print("------> entry: {} <------".format(db_entry))
 
 						for field in db_tab_fields:
 							if field[db_col_type_id]:
@@ -140,6 +163,16 @@ def main(argv):
 									# appears that notes don't have a field type ID
 									print("{}".format(field[db_col_value]))
 
+						while True:
+							# query user
+							user_selection = menu('', '', 'W')
+
+							if user_selection == -1:
+								print()
+								print("# this is where writing to file will happen but not yet #")
+								print("# maybe use safe version of entry name? #")
+							elif user_selection == 0:
+								break
 
 if __name__ == '__main__':
 	main(sys.argv[1:])
