@@ -1,6 +1,6 @@
 ![icon](images/icon.png) read-codebook.py
 ---
-This is a **[python](https://en.wikipedia.org/wiki/Python_(programming_language))** script to read through a previously decrypted **[Codebook](https://www.zetetic.net/codebook/)** database file. The idea is to quickly traverse the dB structure to get to the required infomation. This is all text based and is very simple to use. No modifications to the database are possible.
+This is a **[python](https://en.wikipedia.org/wiki/Python_(programming_language))** script to read through a previously decrypted **[Codebook](https://www.zetetic.net/codebook/)** database file. The idea is to quickly traverse the dB structure to get to the required infomation. This is all console based and is very simple to use. No modifications to the database are possible.
 
 ---
 ###**Description:**
@@ -27,6 +27,7 @@ The plaintext database file to read.
 
 - [openSUSE](https://www.opensuse.org/) - *13.2 64b*
 - GNU BASH - *v4.2.53*
+- Geany - *v1.24.1*
 - KDE Development Platform - *v4.14.9*
 - QT - *v4.8.6*
 - SQLCipher - *v3.8.10.2* 
@@ -49,6 +50,6 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**To-Do List:**
 
+- (2016-08-09) - option to save selected entry to text file.
 - (2016-08-09) - need to loop back after checking out selected entry.
 - (2016-08-09) - perform decryption on original strip.db file.
-- (2016-08-09) - option to save selected entry to text file.
