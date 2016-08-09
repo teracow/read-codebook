@@ -48,18 +48,18 @@ def menu(title, records, mode):
 		if mode == 'B':
 			print(" (B) <Back>")
 			print()
-			prompt_tail = ' or B): '
+			prompt_tail = 'B'
 		elif mode == 'W':
 			print(" (W) <Write this to a file>")
 			print(" (B) <Back>")
 			print()
-			prompt_tail = ' or W,B): '
+			prompt_tail = 'W,B'
 		else:
 			print(" (Q) <Quit>")
 			print()
-			prompt_tail = ' or Q): '
+			prompt_tail = 'Q'
 
-		user_selection = input(' Select (1 - ' + str(acc) + prompt_tail)
+		user_selection = input(' Select (1 - ' + str(acc) + ' or ' + prompt_tail + '): ')
 
 		# choose permissible actions based on 'mode'
 		if not user_selection.isdigit():
