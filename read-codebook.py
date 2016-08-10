@@ -44,23 +44,23 @@ def menu(title, records, mode):
 	total = len(records)
 
 	if title:
-		heading_template = '────────┤ {} ├────────'
-		heading = heading_template.format(colour_white_bright + title + colour_reset)
+		header_template = '────────┤ {} ├────────'
+		header_line = header_template.format(colour_white_bright + title + colour_reset)
+		separator_line = ' ├' + '─' * (len(header_template) - 2 + len(title))
 	else:
-		heading_template = '────────────────────────────'
-		heading = heading_template
-		title = '{}'
+		header_template = '────────────────────────────'
+		header_line = header_template
+		separator_line = ' ├' + '─' * (len(header_template))
 
 	while True:
-		print()
-		print(' ┌' + heading)
+		print(' ┌' + header_line)
 
 		for index, record in enumerate(records):
 			print(" │ ({}) {}".format(colour_yellow_bright + str(index + 1) + colour_reset, record[db_col_name]))
 
 		if total > 0:
 			prompt_head = colour_yellow_bright + '1' + colour_reset + ' to ' + colour_yellow_bright + str(total) + colour_reset + ' or '
-			print(' ├' + '─' * (len(heading_template) - 2 + len(title)))
+			print(separator_line)
 		else:
 			prompt_head = ''
 
@@ -75,8 +75,9 @@ def menu(title, records, mode):
 			print(" │ ({}) <{}>".format(colour_yellow_bright + 'Q' + colour_reset, 'Quit'))
 			prompt_tail = colour_yellow_bright + 'Q' + colour_reset
 
-		print(' ├' + '─' * (len(heading_template) - 2 + len(title)))
+		print(separator_line)
 		user_selection = input(' │ select (' + prompt_head + prompt_tail + '): ')
+		print()
 
 		# choose permissible actions based on 'mode'
 		if not user_selection.isdigit():
@@ -105,7 +106,6 @@ def write_entry_to_file(filename, content):
 	output_pathfile = filename.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
 	output_pathfile += '.txt'
 
-	print()
 	if not os.path.exists(output_pathfile):
 		with open(output_pathfile, 'w') as text_file:
 			text_file.write(content + '\n')
@@ -205,6 +205,7 @@ def main(argv):
 						print(entry_display)
 						print(content)
 						print('═' * (len(entry_display_template) - 2 + len(db_entry)))
+						print()
 
 						# single entry loop
 						while True:
