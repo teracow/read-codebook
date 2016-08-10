@@ -33,36 +33,34 @@ db_col_value = 'value'
 db_col_type_id = 'type_id'
 
 def menu(title, records, mode):
+	total = len(records)
+
 	while True:
 		print()
 		
 		if title:
 			print(" --- {} ---".format(title))
 
-		acc = 0
-		for record in records:
-			acc += 1
-			print(" ({}) {}".format(acc, record[db_col_name]))
+		for index, record in enumerate(records):
+			print(" ({}) {}".format(index + 1, record[db_col_name]))
 
-		if acc > 0:
-			prompt_head = '1 - ' + str(acc) + ' or '
+		if total > 0:
+			prompt_head = '1 to ' + str(total) + ' or '
 		else:
 			prompt_head = ''
 			
 		if mode == 'B':
 			print(" (B) <Back>")
-			print()
 			prompt_tail = 'B'
 		elif mode == 'W':
 			print(" (W) <Write this to a file>")
 			print(" (B) <Back>")
-			print()
 			prompt_tail = 'W,B'
 		else:
 			print(" (Q) <Quit>")
-			print()
 			prompt_tail = 'Q'
 
+		print()
 		user_selection = input(' Select (' + prompt_head + prompt_tail + '): ')
 
 		# choose permissible actions based on 'mode'
@@ -83,7 +81,7 @@ def menu(title, records, mode):
 					user_selection = 0
 					break
 		else:
-			if int(user_selection) > 0 and int(user_selection) <= acc:
+			if int(user_selection) > 0 and int(user_selection) <= total:
 				break
 			
 	return user_selection
