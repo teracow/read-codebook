@@ -42,13 +42,13 @@ colour_reset = '\033[0m'
 
 def menu(title, records, record_name, mode):
 	total = len(records)
-	header_line, separator_line, footer_line = calc_header_footer_variable_width(title, records, record_name)
+	header_line, separator_line, footer_line, box_width = generate_header_footer_variable_width_display(title, records, record_name)
 
 	while True:
 		print(header_line)
 
 		for index, record in enumerate(records):
-			print(" │ ({}) {}".format(colour_yellow_bright + str(index + 1) + colour_reset, record[record_name]))
+			print(generate_line_item_display(index + 1, record[record_name], box_width))
 
 		if total > 0:
 			prompt_head = colour_yellow_bright + '1' + colour_reset + ' to ' + colour_yellow_bright + str(total) + colour_reset + ' or '
@@ -57,15 +57,15 @@ def menu(title, records, record_name, mode):
 			prompt_head = ''
 
 		if mode == 'B':
-			print(" │ ({}) <{}>".format(colour_yellow_bright + 'B' + colour_reset, 'Back'))
 			prompt_tail = colour_yellow_bright + 'B' + colour_reset
+			print(generate_line_item_display('B', 'Back', box_width))
 		elif mode == 'W':
-			print(" │ ({}) <{}>".format(colour_yellow_bright + 'W' + colour_reset, 'Write to a text file'))
-			print(" │ ({}) <{}>".format(colour_yellow_bright + 'B' + colour_reset, 'Back'))
 			prompt_tail = colour_yellow_bright + 'W' + colour_reset + ',' + colour_yellow_bright + 'B' + colour_reset
+			print(generate_line_item_display('W', 'Write to text file', box_width))
+			print(generate_line_item_display('B', 'Back', box_width))
 		else:
-			print(" │ ({}) <{}>".format(colour_yellow_bright + 'Q' + colour_reset, 'Quit'))
 			prompt_tail = colour_yellow_bright + 'Q' + colour_reset
+			print(generate_line_item_display('Q', 'Quit', box_width))
 
 		print(footer_line)
 		user_selection = input('   select (' + prompt_head + prompt_tail + '): ')
@@ -94,29 +94,37 @@ def menu(title, records, record_name, mode):
 			
 	return user_selection
 
-def calc_header_footer_variable_width(title, records, record_name):
-	term_width = 32			# set a minimum size
-	overhang = 1			# line width past widest display item - only used when item_width > term_width
+def calc_text_display_width(index, text):
+	
+	return len('(' + str(index) + ') ' + text + ' ')
+
+def generate_line_item_display(index, text, box_width):
+
+	return ' │ ({}) {} │'.format(colour_yellow_bright + str(index) + colour_reset, text + ' ' * (box_width - calc_text_display_width(index, text)))
+	
+def generate_header_footer_variable_width_display(title, records, record_name):
+	box_width = 32			# set a minimum size
+	index_space = 1			# this is the space before the index parentheses - only used to calculate box width
 	
 	# find longest display item so box width can be calculated
 	for index, record in enumerate(records):
-		item_width = 4 + len(str(index)) + len(record[record_name])
+		item_width = calc_text_display_width(index, record[record_name])
 		
-		if item_width > term_width:
-			term_width = item_width
+		if item_width > box_width:
+			box_width = item_width
 	
 	if title:
-		header_line = ' ┌' + '─' * 4 + '┤ ' + colour_white_bright + title + colour_reset + ' ├' + '─' * (term_width - 4 - 4 - len(title) + overhang)
-		separator_line = ' ├' + '─' * ((term_width) + overhang)
-		footer_line = ' └' + '─' * ((term_width) + overhang)
+		header_line = ' ┌' + '─' * 4 + '┤ ' + colour_white_bright + title + colour_reset + ' ├' + '─' * (box_width - 4 - 4 - len(title) + index_space) + '┐'
+		separator_line = ' ├' + '─' * ((box_width) + index_space) + '┤'
+		footer_line = ' └' + '─' * ((box_width) + index_space) + '┘'
 	else:
-		header_line = ' ┌' + '─' * ((term_width) + overhang)
+		header_line = ' ┌' + '─' * ((box_width) + index_space) + '┐'
 		separator_line = ''
-		footer_line = ' └' + '─' * ((term_width) + overhang)
+		footer_line = ' └' + '─' * ((box_width) + index_space) + '┘'
 						
-	return header_line, separator_line, footer_line
+	return header_line, separator_line, footer_line, box_width
 
-def calc_header_footer_full_width(title):
+def generate_header_footer_full_width_display(title):
 	rows_str, columns_str = os.popen('stty size', 'r').read().split()
 	rows = int(rows_str)
 	columns = int(columns_str)
@@ -223,7 +231,7 @@ def main(argv):
 								# appears that notes don't have a field type ID
 								content = field[db_col_value]
 
-						header_line, footer_line = calc_header_footer_full_width(db_entry)
+						header_line, footer_line = generate_header_footer_full_width_display(db_entry)
 						
 						print(header_line)
 						print(content)
