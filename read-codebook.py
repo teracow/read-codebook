@@ -53,7 +53,7 @@ def menu(title, records, mode):
 			print(" (B) <Back>")
 			prompt_tail = 'B'
 		elif mode == 'W':
-			print(" (W) <Write this to a file>")
+			print(" (W) <Write to a text file>")
 			print(" (B) <Back>")
 			prompt_tail = 'W,B'
 		else:
@@ -95,9 +95,9 @@ def write_entry_to_file(filename, content):
 		with open(output_pathfile, 'w') as text_file:
 			text_file.write(content + '\n')
 
-		print(" * entry written to file *")
+		print(" * written to file *")
 	else:
-		print(" ! could not write as file already exists !")
+		print(" ! could not write - file already exists !")
 	
 	return
 	
@@ -142,6 +142,7 @@ def main(argv):
 		cur.execute('SELECT * FROM ' + db_name_categories)
 		db_tab_categories = cur.fetchall()
 
+		# categories loop
 		while True:
 			# query user
 			user_selection = menu(db_name_categories, db_tab_categories, 'Q')
@@ -156,6 +157,7 @@ def main(argv):
 				cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_category_id + ' = \"' + selected_category_id + '\"')
 				db_tab_entry = cur.fetchall()
 				
+				# entries loop
 				while True:
 					# query user
 					user_selection = menu(db_category, db_tab_entry, 'B')
@@ -170,9 +172,6 @@ def main(argv):
 						cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + selected_entry_id + '\"')
 						db_tab_fields = cur.fetchall()
 
-						print()
-						print(" ------> entry: {} <------".format(db_entry))
-
 						content = ''
 
 						for field in db_tab_fields:
@@ -185,8 +184,11 @@ def main(argv):
 									# appears that notes don't have a field type ID
 									content = field[db_col_value]
 
+						print()
+						print(" ------> entry: {} <------".format(db_entry))
 						print(content)
 
+						# single entry loop
 						while True:
 							# query user
 							user_selection = menu('', '', 'W')
