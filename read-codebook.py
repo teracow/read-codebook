@@ -42,7 +42,7 @@ colour_reset = '\033[0m'
 
 def menu(title, records, record_name, mode):
 	total = len(records)
-	header_line, separator_line, footer_line, box_width = generate_header_footer_variable_width_display(title, records, record_name)
+	header_line, separator_line, footer_line, box_width = generate_lines_variable_width_display(title, records, record_name)
 
 	while True:
 		print(header_line)
@@ -51,27 +51,27 @@ def menu(title, records, record_name, mode):
 			print(generate_line_item_display(index + 1, record[record_name], box_width))
 
 		if total > 0:
-			prompt_head = colour_yellow_bright + '1' + colour_reset + ' to ' + colour_yellow_bright + str(total) + colour_reset + ' or '
+			prompt_head = allowed_key('1') + ' to ' + allowed_key(str(total)) + ' or '
 			print(separator_line)
 		else:
 			prompt_head = ''
 
 		if mode == 'B':
-			prompt_tail = colour_yellow_bright + 'B' + colour_reset
+			prompt_tail = allowed_key('B')
 			print(generate_line_item_display('B', 'Back', box_width))
 		elif mode == 'W':
-			prompt_tail = colour_yellow_bright + 'W' + colour_reset + ',' + colour_yellow_bright + 'B' + colour_reset
+			prompt_tail = allowed_key('W') + ' or ' + allowed_key('B')
 			print(generate_line_item_display('W', 'Write to text file', box_width))
 			print(generate_line_item_display('B', 'Back', box_width))
 		else:
-			prompt_tail = colour_yellow_bright + 'Q' + colour_reset
+			prompt_tail = allowed_key('Q')
 			print(generate_line_item_display('Q', 'Quit', box_width))
 
 		print(footer_line)
 		user_selection = input('   select (' + prompt_head + prompt_tail + '): ')
 		print()
 
-		# choose permissible actions based on 'mode'
+		# allowed keys based on 'mode'
 		if not user_selection.isdigit():
 			if mode == 'B':
 				if user_selection == 'B' or user_selection == 'b':
@@ -94,17 +94,25 @@ def menu(title, records, record_name, mode):
 			
 	return user_selection
 
+def allowed_key(text):
+
+	return colour_yellow_bright + text + colour_reset
+
+def bold_title(text):
+	
+	return colour_white_bright + text + colour_reset
+	
 def calc_text_display_width(index, text):
 	
 	return len('(' + str(index) + ') ' + text + ' ')
 
 def generate_line_item_display(index, text, box_width):
 
-	return ' │ ({}) {} │'.format(colour_yellow_bright + str(index) + colour_reset, text + ' ' * (box_width - calc_text_display_width(index, text)))
+	return ' │ ({}) {} │'.format(allowed_key(str(index)), text + ' ' * (box_width - calc_text_display_width(index, text)))
 	
-def generate_header_footer_variable_width_display(title, records, record_name):
+def generate_lines_variable_width_display(title, records, record_name):
 	box_width = 32			# set a minimum size
-	index_space = 1			# this is the space before the index parentheses - only used to calculate box width
+	index_space = 1			# this is the space between the left border and the index parentheses - only used to calculate box width
 	
 	# find longest display item so box width can be calculated
 	for index, record in enumerate(records):
@@ -114,7 +122,7 @@ def generate_header_footer_variable_width_display(title, records, record_name):
 			box_width = item_width
 	
 	if title:
-		header_line = ' ┌' + '─' * 4 + '┤ ' + colour_white_bright + title + colour_reset + ' ├' + '─' * (box_width - 4 - 4 - len(title) + index_space) + '┐'
+		header_line = ' ┌' + '─' * 4 + '┤ ' + bold_title(title) + ' ├' + '─' * (box_width - 4 - 4 - len(title) + index_space) + '┐'
 		separator_line = ' ├' + '─' * ((box_width) + index_space) + '┤'
 		footer_line = ' └' + '─' * ((box_width) + index_space) + '┘'
 	else:
@@ -124,12 +132,11 @@ def generate_header_footer_variable_width_display(title, records, record_name):
 						
 	return header_line, separator_line, footer_line, box_width
 
-def generate_header_footer_full_width_display(title):
+def generate_lines_full_width_display(title):
 	rows_str, columns_str = os.popen('stty size', 'r').read().split()
-	rows = int(rows_str)
 	columns = int(columns_str)
 
-	header_line = '═' * 8 + '╣ ' + colour_white_bright + title + colour_reset + ' ╠' + '═' * (columns - 8 - 4 - len(title))
+	header_line = '═' * 8 + '╣ ' + bold_title(title) + ' ╠' + '═' * (columns - 8 - 4 - len(title))
 	footer_line = '═' * columns
 						
 	return header_line, footer_line
@@ -231,7 +238,7 @@ def main(argv):
 								# appears that notes don't have a field type ID
 								content = field[db_col_value]
 
-						header_line, footer_line = generate_header_footer_full_width_display(db_entry)
+						header_line, footer_line = generate_lines_full_width_display(db_entry)
 						
 						print(header_line)
 						print(content)
