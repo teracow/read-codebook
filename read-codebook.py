@@ -51,21 +51,23 @@ def menu(title, records, record_name, mode):
 			print(generate_line_item_display(index + 1, record[record_name], box_width))
 
 		if total > 0:
-			prompt_head = allowed_key('1') + ' to ' + allowed_key(str(total)) + ' or '
+			prompt_head = allowed_key('1') + ' to ' + allowed_key(str(total)) 
 			print(separator_line)
 		else:
 			prompt_head = ''
 
 		if mode == 'B':
-			prompt_tail = allowed_key('B')
+			prompt_tail = ' or ' + allowed_key('B')
 			print(generate_line_item_display('B', 'Back', box_width))
 		elif mode == 'W':
 			prompt_tail = allowed_key('W') + ' or ' + allowed_key('B')
 			print(generate_line_item_display('W', 'Write to text file', box_width))
 			print(generate_line_item_display('B', 'Back', box_width))
 		else:
-			prompt_tail = allowed_key('Q')
-			print(generate_line_item_display('Q', 'Quit', box_width))
+			prompt_tail = ''
+
+		prompt_tail += ' or ' + allowed_key('Q')
+		print(generate_line_item_display('Q', 'Quit', box_width))
 
 		print(footer_line)
 		user_selection = input('   select (' + prompt_head + prompt_tail + '): ')
@@ -73,6 +75,9 @@ def menu(title, records, record_name, mode):
 
 		# allowed keys based on 'mode'
 		if not user_selection.isdigit():
+			if user_selection == 'Q' or user_selection == 'q':
+				sys.exit()
+
 			if mode == 'B':
 				if user_selection == 'B' or user_selection == 'b':
 					user_selection = 0
@@ -84,10 +89,7 @@ def menu(title, records, record_name, mode):
 				elif user_selection == 'B' or user_selection == 'b':
 					user_selection = 0
 					break
-			elif mode == 'Q':
-				if user_selection == 'Q' or user_selection == 'q':
-					user_selection = 0
-					break
+					
 		else:
 			if int(user_selection) > 0 and int(user_selection) <= total:
 				break
@@ -207,7 +209,7 @@ def main(argv):
 		while True:
 			# query user
 			clear_display()
-			user_selection = menu(db_name_categories, db_tab_categories, db_col_name, 'Q')
+			user_selection = menu(db_name_categories, db_tab_categories, db_col_name, '')
 
 			if user_selection == 0:
 				break
