@@ -91,6 +91,8 @@ def menu(title, records, record_name, mode):
 		else:
 			if int(user_selection) > 0 and int(user_selection) <= total:
 				break
+		
+		clear_display()
 			
 	return user_selection
 
@@ -132,11 +134,14 @@ def generate_lines_variable_width_display(title, records, record_name):
 						
 	return header_line, separator_line, footer_line, box_width
 
-def generate_line_full_width_display():
+def generate_lines_full_width_display(title):
 	rows_str, columns_str = os.popen('stty size', 'r').read().split()
 	columns = int(columns_str)
-
-	return '═' * columns
+	
+	header_line = '═' * 8 + '╣ ' + bold_title(title) + ' ╠' + '═' * (columns - 8 - 4 - len(title))
+	footer_line = '═' * columns
+						
+	return header_line, footer_line
 
 def write_entry_to_file(filename, content):
 	output_pathfile = filename.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
@@ -149,6 +154,11 @@ def write_entry_to_file(filename, content):
 		print(" * {} *".format(colour_green_bright + 'written to file' + colour_reset))
 	else:
 		print(" ! {} !".format(colour_red_bright + 'could not write (file already exists)' + colour_reset))
+	
+	return
+	
+def clear_display():
+	print('\033c')
 	
 	return
 	
@@ -196,6 +206,7 @@ def main(argv):
 		# categories loop
 		while True:
 			# query user
+			clear_display()
 			user_selection = menu(db_name_categories, db_tab_categories, db_col_name, 'Q')
 
 			if user_selection == 0:
@@ -211,11 +222,14 @@ def main(argv):
 				# entries loop
 				while True:
 					# query user
+					clear_display()
 					user_selection = menu(db_category, db_tab_entry, db_col_name, 'B')
 
 					if user_selection == 0:
 						break
 					else:
+						clear_display()
+						
 						row = db_tab_entry[int(user_selection) - 1]
 						selected_entry_id = row[db_col_id]
 						db_entry = row[db_col_name]
@@ -235,11 +249,11 @@ def main(argv):
 								# appears that notes don't have a field type ID
 								content = field[db_col_value]
 
-						separator_line = generate_line_full_width_display()
+						header_line, footer_line = generate_lines_full_width_display(db_entry)
 						
-						print(separator_line)
+						print(header_line)
 						print(content)
-						print(separator_line)
+						print(footer_line)
 						print()
 
 						# single entry loop
