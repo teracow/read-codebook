@@ -86,26 +86,15 @@ def menu(title, records, mode):
 			
 	return user_selection
 
-def write_entry_to_file(db_entry):
-	# yes, ugly, but hopefully catches the important ones ... I'll prettify it later
-	safername = db_entry.replace(' ', '_')
-	safername = safername.replace('/', '_')
-	safername = safername.replace('\\', '_')
-	safername = safername.replace('?', '_')
-	outpathfile = safername + '.txt'
+def write_entry_to_file(filename, content):
+	output_pathfile = filename.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
+	output_pathfile += '.txt'
 
 	print()
-	if not os.path.exists(outpathfile):
-		with open(outpathfile, 'w') as text_file:
-			for field in db_tab_fields:
-				if field[db_col_type_id]:
-					for field_types in db_tab_types:
-						if field_types[db_col_id] == field[db_col_type_id]:
-							text_file.write("{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value]))
-							break
-				else:
-						# appears that notes don't have a field type ID
-						text_file.write(field[db_col_value] + '\n')
+	if not os.path.exists(output_pathfile):
+		with open(output_pathfile, 'w') as text_file:
+			text_file.write(content + '\n')
+
 		print(" * entry written to file *")
 	else:
 		print(" ! could not write as file already exists !")
@@ -184,22 +173,26 @@ def main(argv):
 						print()
 						print(" ------> entry: {} <------".format(db_entry))
 
+						content = ''
+
 						for field in db_tab_fields:
 							if field[db_col_type_id]:
 								for field_types in db_tab_types:
 									if field_types[db_col_id] == field[db_col_type_id]:
-										print(" {}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value]))
+										content += "{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value])
 										break
 							else:
 									# appears that notes don't have a field type ID
-									print("{}".format(field[db_col_value]))
+									content = field[db_col_value]
+
+						print(content)
 
 						while True:
 							# query user
 							user_selection = menu('', '', 'W')
 
 							if user_selection == -1:
-								write_entry_to_file(db_entry)
+								write_entry_to_file(db_entry, content)
 							elif user_selection == 0:
 								break
 
