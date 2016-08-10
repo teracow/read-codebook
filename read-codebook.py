@@ -40,25 +40,15 @@ colour_green_bright = '\033[1;32;40m'
 colour_red_bright = '\033[1;31;40m'
 colour_reset = '\033[0m'
 
-def menu(title, records, mode):
+def menu(title, records, record_name, mode):
 	total = len(records)
-
-	if title:
-		header_template = '────────┤ {} ├────────'
-		header_line = header_template.format(colour_white_bright + title + colour_reset)
-		separator_line = ' ├' + '─' * (len(header_template) - 2 + len(title))
-		footer_line = ' └' + '─' * (len(header_template) - 2 + len(title))
-	else:
-		header_template = '────────────────────────────'
-		header_line = header_template
-		separator_line = ' ├' + '─' * (len(header_template))
-		footer_line = ' └' + '─' * (len(header_template))
+	header_line, separator_line, footer_line = calc_header_footer_variable_width(title, records, record_name)
 
 	while True:
-		print(' ┌' + header_line)
+		print(header_line)
 
 		for index, record in enumerate(records):
-			print(" │ ({}) {}".format(colour_yellow_bright + str(index + 1) + colour_reset, record[db_col_name]))
+			print(" │ ({}) {}".format(colour_yellow_bright + str(index + 1) + colour_reset, record[record_name]))
 
 		if total > 0:
 			prompt_head = colour_yellow_bright + '1' + colour_reset + ' to ' + colour_yellow_bright + str(total) + colour_reset + ' or '
@@ -103,6 +93,37 @@ def menu(title, records, mode):
 				break
 			
 	return user_selection
+
+def calc_header_footer_variable_width(title, records, record_name):
+	term_width = 27			# set a minimum size
+	
+	# find longest record so box width can be calculated
+	for index, record in enumerate(records):
+		item_width = 3 + len(str(index)) + len(record[record_name])
+		
+		if item_width > term_width:
+			term_width = item_width
+	
+	if title:
+		header_line = ' ┌' + '─' * 4 + '┤ ' + colour_white_bright + title + colour_reset + ' ├' + '─' * (term_width - 4 - 4 - len(title) + 1)
+		separator_line = ' ├' + '─' * ((term_width) + 1)
+		footer_line = ' └' + '─' * ((term_width) + 1)
+	else:
+		header_line = ' ┌' + '─' * ((term_width) + 1)
+		separator_line = ''
+		footer_line = ' └' + '─' * ((term_width) + 1)
+						
+	return header_line, separator_line, footer_line
+
+def calc_header_footer_full_width(title):
+	rows_str, columns_str = os.popen('stty size', 'r').read().split()
+	rows = int(rows_str)
+	columns = int(columns_str)
+
+	header_line = '═' * 8 + '╣ ' + colour_white_bright + title + colour_reset + ' ╠' + '═' * (columns - 8 - 4 - len(title))
+	footer_line = '═' * columns
+						
+	return header_line, footer_line
 
 def write_entry_to_file(filename, content):
 	output_pathfile = filename.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
@@ -162,7 +183,7 @@ def main(argv):
 		# categories loop
 		while True:
 			# query user
-			user_selection = menu(db_name_categories, db_tab_categories, 'Q')
+			user_selection = menu(db_name_categories, db_tab_categories, db_col_name, 'Q')
 
 			if user_selection == 0:
 				break
@@ -177,7 +198,7 @@ def main(argv):
 				# entries loop
 				while True:
 					# query user
-					user_selection = menu(db_category, db_tab_entry, 'B')
+					user_selection = menu(db_category, db_tab_entry, db_col_name, 'B')
 
 					if user_selection == 0:
 						break
@@ -201,18 +222,17 @@ def main(argv):
 								# appears that notes don't have a field type ID
 								content = field[db_col_value]
 
-						print()
-						entry_display_template = '════════╣ {} ╠════════'
-						entry_display = entry_display_template.format(colour_white_bright + db_entry + colour_reset)
-						print(entry_display)
+						header_line, footer_line = calc_header_footer_full_width(db_entry)
+						
+						print(header_line)
 						print(content)
-						print('═' * (len(entry_display_template) - 2 + len(db_entry)))
+						print(footer_line)
 						print()
 
 						# single entry loop
 						while True:
 							# query user
-							user_selection = menu('', '', 'W')
+							user_selection = menu('', '', '', 'W')
 
 							if user_selection == -1:
 								write_entry_to_file(db_entry, content)
