@@ -21,47 +21,62 @@ import getopt
 import sqlite3 as lite
 
 script_details = 'read-codebook.py (2016-08-10)'
+
 db_name_categories = 'categories'
 db_name_entries = 'entries'
 db_name_fields = 'fields'
 db_name_types = 'types'						# field data types - password, email, number, etc ...
+
 db_col_id = 'id'
 db_col_category_id = 'category_id'
 db_col_entry_id = 'entry_id'
+db_col_type_id = 'type_id'
 db_col_name = 'name'
 db_col_value = 'value'
-db_col_type_id = 'type_id'
+
+colour_white_bright = '\033[1;37;40m'
+colour_yellow_bright = '\033[1;33;40m'
+colour_green_bright = '\033[1;32;40m'
+colour_red_bright = '\033[1;31;40m'
+colour_reset = '\033[0m'
 
 def menu(title, records, mode):
 	total = len(records)
 
+	if title:
+		heading_template = '────────┤ {} ├────────'
+		heading = heading_template.format(colour_white_bright + title + colour_reset)
+	else:
+		heading_template = '────────────────────────────'
+		heading = heading_template
+		title = '{}'
+
 	while True:
 		print()
-		
-		if title:
-			print(" --- {} ---".format(title))
+		print(' ┌' + heading)
 
 		for index, record in enumerate(records):
-			print(" ({}) {}".format(index + 1, record[db_col_name]))
+			print(" │ ({}) {}".format(colour_yellow_bright + str(index + 1) + colour_reset, record[db_col_name]))
 
 		if total > 0:
-			prompt_head = '1 to ' + str(total) + ' or '
+			prompt_head = colour_yellow_bright + '1' + colour_reset + ' to ' + colour_yellow_bright + str(total) + colour_reset + ' or '
+			print(' ├' + '─' * (len(heading_template) - 2 + len(title)))
 		else:
 			prompt_head = ''
-			
-		if mode == 'B':
-			print(" (B) <Back>")
-			prompt_tail = 'B'
-		elif mode == 'W':
-			print(" (W) <Write to a text file>")
-			print(" (B) <Back>")
-			prompt_tail = 'W,B'
-		else:
-			print(" (Q) <Quit>")
-			prompt_tail = 'Q'
 
-		print()
-		user_selection = input(' Select (' + prompt_head + prompt_tail + '): ')
+		if mode == 'B':
+			print(" │ ({}) <{}>".format(colour_yellow_bright + 'B' + colour_reset, 'Back'))
+			prompt_tail = colour_yellow_bright + 'B' + colour_reset
+		elif mode == 'W':
+			print(" │ ({}) <{}>".format(colour_yellow_bright + 'W' + colour_reset, 'Write to a text file'))
+			print(" │ ({}) <{}>".format(colour_yellow_bright + 'B' + colour_reset, 'Back'))
+			prompt_tail = colour_yellow_bright + 'W' + colour_reset + ',' + colour_yellow_bright + 'B' + colour_reset
+		else:
+			print(" │ ({}) <{}>".format(colour_yellow_bright + 'Q' + colour_reset, 'Quit'))
+			prompt_tail = colour_yellow_bright + 'Q' + colour_reset
+
+		print(' ├' + '─' * (len(heading_template) - 2 + len(title)))
+		user_selection = input(' │ select (' + prompt_head + prompt_tail + '): ')
 
 		# choose permissible actions based on 'mode'
 		if not user_selection.isdigit():
@@ -95,9 +110,9 @@ def write_entry_to_file(filename, content):
 		with open(output_pathfile, 'w') as text_file:
 			text_file.write(content + '\n')
 
-		print(" * written to file *")
+		print(" * {} *".format(colour_green_bright + 'written to file' + colour_reset))
 	else:
-		print(" ! could not write - file already exists !")
+		print(" ! {} !".format(colour_red_bright + 'could not write (file already exists)' + colour_reset))
 	
 	return
 	
@@ -181,12 +196,15 @@ def main(argv):
 										content += "{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value])
 										break
 							else:
-									# appears that notes don't have a field type ID
-									content = field[db_col_value]
+								# appears that notes don't have a field type ID
+								content = field[db_col_value]
 
 						print()
-						print(" ------> entry: {} <------".format(db_entry))
+						entry_display_template = '════════╣ {} ╠════════'
+						entry_display = entry_display_template.format(colour_white_bright + db_entry + colour_reset)
+						print(entry_display)
 						print(content)
+						print('═' * (len(entry_display_template) - 2 + len(db_entry)))
 
 						# single entry loop
 						while True:
