@@ -95,23 +95,24 @@ def menu(title, records, record_name, mode):
 	return user_selection
 
 def calc_header_footer_variable_width(title, records, record_name):
-	term_width = 27			# set a minimum size
+	term_width = 32			# set a minimum size
+	overhang = 1			# line width past widest display item - only used when item_width > term_width
 	
-	# find longest record so box width can be calculated
+	# find longest display item so box width can be calculated
 	for index, record in enumerate(records):
-		item_width = 3 + len(str(index)) + len(record[record_name])
+		item_width = 4 + len(str(index)) + len(record[record_name])
 		
 		if item_width > term_width:
 			term_width = item_width
 	
 	if title:
-		header_line = ' ┌' + '─' * 4 + '┤ ' + colour_white_bright + title + colour_reset + ' ├' + '─' * (term_width - 4 - 4 - len(title) + 1)
-		separator_line = ' ├' + '─' * ((term_width) + 1)
-		footer_line = ' └' + '─' * ((term_width) + 1)
+		header_line = ' ┌' + '─' * 4 + '┤ ' + colour_white_bright + title + colour_reset + ' ├' + '─' * (term_width - 4 - 4 - len(title) + overhang)
+		separator_line = ' ├' + '─' * ((term_width) + overhang)
+		footer_line = ' └' + '─' * ((term_width) + overhang)
 	else:
-		header_line = ' ┌' + '─' * ((term_width) + 1)
+		header_line = ' ┌' + '─' * ((term_width) + overhang)
 		separator_line = ''
-		footer_line = ' └' + '─' * ((term_width) + 1)
+		footer_line = ' └' + '─' * ((term_width) + overhang)
 						
 	return header_line, separator_line, footer_line
 
