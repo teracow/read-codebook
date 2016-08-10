@@ -40,15 +40,14 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-09) - None (but I'm sure they're in there ... somewhere).
+- (2016-08-11) - None (but I'm sure they're in there ... somewhere).
 
 ---
 ###**Work-in-Progress:**
 
-- (2016-08-09) - Lots! New project so many things to do! ![smiley](images/smiley.png)
+- (2016-08-11) - Lots! New project so many things to do! ![smiley](images/smiley.png)
  
 ---
 ###**To-Do List:**
 
-- (2016-08-09) - option to save selected entry to text file.
-- (2016-08-09) - perform decryption on original strip.db file.
+- (2016-08-11) - perform decryption on original strip.db file.
