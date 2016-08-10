@@ -20,7 +20,7 @@ import sys
 import getopt
 import sqlite3 as lite
 
-script_details = 'read-codebook.py (2016-08-10)'
+script_details = 'read-codebook.py (2016-08-11)'
 
 db_name_categories = 'categories'
 db_name_entries = 'entries'
@@ -47,10 +47,12 @@ def menu(title, records, mode):
 		header_template = '────────┤ {} ├────────'
 		header_line = header_template.format(colour_white_bright + title + colour_reset)
 		separator_line = ' ├' + '─' * (len(header_template) - 2 + len(title))
+		footer_line = ' └' + '─' * (len(header_template) - 2 + len(title))
 	else:
 		header_template = '────────────────────────────'
 		header_line = header_template
 		separator_line = ' ├' + '─' * (len(header_template))
+		footer_line = ' └' + '─' * (len(header_template))
 
 	while True:
 		print(' ┌' + header_line)
@@ -75,8 +77,8 @@ def menu(title, records, mode):
 			print(" │ ({}) <{}>".format(colour_yellow_bright + 'Q' + colour_reset, 'Quit'))
 			prompt_tail = colour_yellow_bright + 'Q' + colour_reset
 
-		print(separator_line)
-		user_selection = input(' │ select (' + prompt_head + prompt_tail + '): ')
+		print(footer_line)
+		user_selection = input('   select (' + prompt_head + prompt_tail + '): ')
 		print()
 
 		# choose permissible actions based on 'mode'
