@@ -20,7 +20,7 @@ import sys
 import getopt
 import sqlite3 as lite
 
-script_details = 'read-codebook.py (2016-08-11)'
+script_details = 'read-codebook.py (2016-08-12)'
 
 db_name_categories = 'categories'
 db_name_entries = 'entries'
