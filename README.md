@@ -22,6 +22,8 @@ As this creates a security hole, it is recommended that this only be done in a s
 
 These script were written for my convenience so that I can access the 'strip.db' file in the event that my iPhone is lost, stolen or damaged. Being able to do so means I'm more likely to store important information in my copy of the great **[Codebook](https://www.zetetic.net/codebook/)** app. ![smiley](images/smiley.png)
 
+At this time, I've decided not to use pysqlcipher to reduce the dependance on other packages.
+
 ---
 ###**Usage:**
 
