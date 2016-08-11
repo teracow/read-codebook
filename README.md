@@ -1,6 +1,6 @@
 ![icon](images/icon.png) read-codebook.py
 ---
-This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shell\))** and **[Python](https://en.wikipedia.org/wiki/Python_(programming_language))** scripts to decrypt and read through a **[Codebook](https://www.zetetic.net/codebook/)** database file. The idea is to quickly traverse the dB structure to get to the required infomation. This is all console based and is simple to use. No modifications to the database are possible.
+This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shell\))** and **[Python](https://en.wikipedia.org/wiki/Python_(programming_language))** scripts to decrypt and read through a **[Codebook](https://www.zetetic.net/codebook/)** database 'strip.db' file. The idea is to quickly traverse the dB structure to get to the required infomation. This is all console based and is simple to use. No modifications to the database are possible.
 
 ---
 ###**Description:**
@@ -18,7 +18,7 @@ This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shel
 ---
 ###**Notes:**
 
-As this creates a security hole, it is recommended that this only be done in a secure environment (i.e. don't run this on Windows) and only if you understand why. I do not take any responsibilty for the integrity and security of your data. 
+As this compromises the security of the original database, it is recommended that this only be done in a secure environment (i.e. don't run this on Windows) and only if you understand why. I do not take any responsibilty for the integrity and security of your data. 
 
 These script were written for my convenience so that I can access the 'strip.db' file in the event that my iPhone is lost, stolen or damaged. Being able to do so means I'm more likely to store important information in my copy of the great **[Codebook](https://www.zetetic.net/codebook/)** app. ![smiley](images/smiley.png)
 
