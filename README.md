@@ -1,16 +1,33 @@
 ![icon](images/icon.png) read-codebook.py
 ---
-This is a **[python](https://en.wikipedia.org/wiki/Python_(programming_language))** script to read through a previously decrypted **[Codebook](https://www.zetetic.net/codebook/)** database file. The idea is to quickly traverse the dB structure to get to the required infomation. This is all console based and is very simple to use. No modifications to the database are possible.
+This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shell\))** and **[Python](https://en.wikipedia.org/wiki/Python_(programming_language))** scripts to decrypt and read through a **[Codebook](https://www.zetetic.net/codebook/)** database file. The idea is to quickly traverse the dB structure to get to the required infomation. This is all console based and is simple to use. No modifications to the database are possible.
 
 ---
 ###**Description:**
 
-1. The user supplies a plaintext SQLite database file created in **[Codebook](https://www.zetetic.net/codebook/)**. 
+1. The user supplies a SQLite database file created in **[Codebook](https://www.zetetic.net/codebook/)**. 
 
-2. Then select the category, then finally the entry. 
+2. The user enters their **Codebook** passphrase.
+
+3. A decrypted (plaintext) version of the database is then written to a new file.
+
+4. The user can then elect to open the included Python reader to examine the plaintext database contents. There is an option to write particular entries to text files.
+
+5. They can then delete this plaintext database file.
+
+---
+###**Notes:**
+
+As this creates a security hole, it is recommended that this only be done in a secure environment (i.e. don't run this on Windows) and only if you understand why. I do not take any responsibilty for the integrity and security of your data. 
+
+These script were written for my convenience so that I can access the 'strip.db' file in the event that my iPhone is lost, stolen or damaged. Being able to do so means I'm more likely to store important information in my copy of the great **[Codebook](https://www.zetetic.net/codebook/)** app. ![smiley](images/smiley.png)
 
 ---
 ###**Usage:**
+
+    $ ./decrypt-strip.sh
+
+or, if the database file has already been decrypted:
 
     $ ./read-codebook.py [PARAMETERS] ...
 
