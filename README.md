@@ -5,13 +5,13 @@ This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shel
 ---
 ###**Description:**
 
-1. The user supplies a SQLite database file created in **[Codebook](https://www.zetetic.net/codebook/)**. 
+1. The user supplies the path and filename to a SQLite database file created in **[Codebook](https://www.zetetic.net/codebook/)** (usually strip.db). 
 
-2. The user enters their **Codebook** passphrase.
+2. Enter the **Codebook** passphrase to decrypt this dB.
 
-3. A decrypted (plaintext) version of the database is then written to a new file.
+3. A decrypted (plaintext) database is then written to a new file located in /dev/shm.
 
-4. The user can then elect to open the included Python reader to examine the plaintext database contents. There is an option to write particular entries to text files.
+4. The user can then elect to open the included Python reader to examine the plaintext database contents. There is an option to write particular entries to text files in the working directory.
 
 5. They can then delete this plaintext database file.
 
@@ -27,19 +27,11 @@ At this time, I've decided not to use pysqlcipher to reduce the dependance on ot
 ---
 ###**Usage:**
 
-    $ ./decrypt-strip.sh
+    $ ./decrypt-strip.sh `[PATHFILE to strip.db]`
 
 or, if the database file has already been decrypted:
 
-    $ ./read-codebook.py [PARAMETERS] ...
-
-Allowable parameters are indicated with a hyphen then a single character or the alternative form with 2 hypens and the full-text. Single character parameters (without arguments) can be concatenated. e.g. `-cdeghkqsv`. Parameters can be specified as follows:  
-
-
-***Required***
-
-`-i` or `--input-file [FILENAME]`  
-The plaintext database file to read. 
+    $ ./read-codebook.py `-i` or `--input-file [PATHFILE to plaintext.db]`  
 
 ---
 ###**Development Environment:**
@@ -59,7 +51,7 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-11) - None (but I'm sure they're in there ... somewhere).
+- (2016-08-12) - None.
 
 ---
 ###**Work-in-Progress:**
@@ -69,4 +61,4 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**To-Do List:**
 
-- (2016-08-11) - perform decryption on original strip.db file.
+- (2016-08-12) - Things ... but nothing comes to mind ...

@@ -8,30 +8,60 @@
 
 # Decrypt 'strip.db' with a supplied password and write to 'plaintext.db'
 
-script_details="decrypt-strip.sh (2016-08-11)"
-encrypted_pathfile="strip.db"
-unencrypted_pathfile="plaintext.db"
+# $1 = pathfile to 'strip.db'
+
+script_file="decrypt-strip.sh"
+script_name="${script_file%.*}"
+script_details="${script_file} (2016-08-12)"
+
+temp_path="/dev/shm/${script_name}"
+encrypted_file="strip.db"
+unencrypted_file="plaintext.db"
 decrypter="sqlcipher"
 reader="read-codebook.py"
+unencrypted_pathfile="${temp_path}/${unencrypted_file}"
 reader_pathfile="$(dirname "$BASH_SOURCE")/${reader}"
 
+if [ ! -z "$1" ] ; then
+	encrypted_pathfile="$1"
+else
+	encrypted_pathfile="$encrypted_file"
+fi
+
 echo "$script_details"
-
-if [ ! -e "$encrypted_pathfile" ] ; then
-	echo "! Encrypted database file not found: [$encrypted_pathfile]"
-	exit
-fi
-
-if [  -e "$unencrypted_pathfile" ] ; then
-	echo "! Plaintext database file already exists: [$unencrypted_pathfile]"
-	exit
-fi
+echo
 
 which "$decrypter" > /dev/null 2>&1
 
 if [ "$?" -ne "0" ] ; then
 	echo " ! $decrypter is unavailable."
 	exit
+fi
+
+if [ ! -e "$encrypted_pathfile" ] ; then
+	echo "! Encrypted database file not found: [$encrypted_pathfile]"
+
+	exit 1
+fi
+
+mkdir -p "$temp_path"
+
+if [ "$?" -gt "0" ] ; then
+	echo "! Unable to create a temporary build directory! Exiting."
+	exit 1
+fi
+
+if [ -e "$unencrypted_pathfile" ] ; then
+	echo "! Plaintext database file already exists: [$unencrypted_pathfile]"
+	echo -n "? Delete this file first? "
+	read -n 1 result
+	echo
+
+	if [ "$result" == "y" ] || [ "$result" == "Y"  ] ; then
+		rm -F "$unencrypted_pathfile"
+	else
+		exit 1
+	fi
 fi
 
 echo -n "? Enter your CodeBook passphrase: "
