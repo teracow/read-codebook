@@ -27,11 +27,11 @@ At this time, I've decided not to use pysqlcipher to reduce the dependance on ot
 ---
 ###**Usage:**
 
-    $ ./decrypt-strip.sh `[PATHFILE to strip.db]`
+    $ ./decrypt-strip.sh --input-file [PATHFILE to strip.db]
 
 or, if the database file has already been decrypted:
 
-    $ ./read-codebook.py `-i` or `--input-file [PATHFILE to plaintext.db]`  
+    $ ./read-codebook.py --input-file [PATHFILE to plaintext.db]
 
 ---
 ###**Development Environment:**

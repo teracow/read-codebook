@@ -10,26 +10,60 @@
 
 # $1 = pathfile to 'strip.db'
 
-script_file="decrypt-strip.sh"
-script_name="${script_file%.*}"
-script_details="${script_file} (2016-08-12)"
+Init()
+	{
 
-temp_path="/dev/shm/${script_name}"
-encrypted_file="strip.db"
-unencrypted_file="plaintext.db"
-decrypter="sqlcipher"
-reader="read-codebook.py"
-unencrypted_pathfile="${temp_path}/${unencrypted_file}"
-reader_pathfile="$(dirname "$BASH_SOURCE")/${reader}"
+	script_file="decrypt-strip.sh"
+	script_name="${script_file%.*}"
+	script_details="${script_file} (2016-08-12)"
 
-if [ ! -z "$1" ] ; then
-	encrypted_pathfile="$1"
-else
-	encrypted_pathfile="$encrypted_file"
-fi
+	temp_path="/dev/shm/${script_name}"
+	encrypted_file="strip.db"
+	unencrypted_file="plaintext.db"
+	decrypter="sqlcipher"
+	reader="read-codebook.py"
+	unencrypted_pathfile="${temp_path}/${unencrypted_file}"
+	reader_pathfile="$(dirname "$BASH_SOURCE")/${reader}"
+	encrypted_pathfile="./${encrypted_file}"
 
-echo "$script_details"
-echo
+	echo "$script_details"
+	echo
+
+	}
+
+WhatAreMyOptions()
+	{
+
+	# if getopt exited with an error then show help to user
+	[ "$user_parameters_result" != "0" ] && echo && show_help_only=true && return 2
+
+	eval set -- "$user_parameters"
+
+	while true ; do
+		case "$1" in
+			-i | --input-file )
+				encrypted_pathfile="$2"
+				shift 2		# shift to next parameter in $1
+				;;
+			-- )
+				shift		# shift to next parameter in $1
+				break
+				;;
+			* )
+				break		# there are no more matching parameters
+				;;
+		esac
+	done
+
+	}
+
+# check for command-line parameters
+user_parameters=$(getopt -o i: --long input-file: -n $(readlink -f -- "$0") -- "$@")
+user_parameters_result=$?
+user_parameters_raw="$@"
+
+Init
+WhatAreMyOptions
 
 which "$decrypter" > /dev/null 2>&1
 
