@@ -110,13 +110,13 @@ echo "$sql_cmd" | "$decrypter" "$encrypted_pathfile" > /dev/null 2>&1
 if [ "$?" -eq "0" ] ; then
 	echo "done!"
 
-	echo -n "? Open in [$reader] ? "
+	echo -n "? Open in [$reader] ? (y/n) "
 	read -n 1 result
 	echo
 
 	if [ "$result" == "y" ] || [ "$result" == "Y"  ] ; then
 		"$reader_pathfile" -i "$unencrypted_pathfile"
-		echo -n "? Delete [$unencrypted_pathfile] ? "
+		echo -n "? Delete [$unencrypted_pathfile] ? (y/n) "
 		read -n 1 result
 		echo
 
