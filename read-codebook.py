@@ -40,49 +40,63 @@ colour_green_bright = '\033[1;32;40m'
 colour_red_bright = '\033[1;31;40m'
 colour_reset = '\033[0m'
 
-def menu(title, records, record_name, mode):
+def menu(title, records, record_name, options, prompt_only):
 	total = len(records)
 	header_line, separator_line, footer_line, box_width = generate_lines_variable_width_display(title, records, record_name)
 
-	while True:
-		print(header_line)
+	if prompt_only:
+		display_menu = False
+	else:
+		display_menu = True
 
-		for index, record in enumerate(records):
-			print(generate_line_item_display(index + 1, record[record_name], box_width))
+	while True:
+		if display_menu: 
+			print(header_line)
+
+			for index, record in enumerate(records):
+				print(generate_line_item_display(index + 1, record[record_name], box_width))
 
 		if total > 0:
+			if display_menu: print(separator_line)
+
 			prompt_head = allowed_key('1') + ' to ' + allowed_key(str(total)) 
-			print(separator_line)
 		else:
 			prompt_head = ''
 
-		if mode == 'B':
+		if options == 'B':
+			if display_menu: print(generate_line_item_display('B', 'Back', box_width))
+
 			prompt_tail = ' or ' + allowed_key('B')
-			print(generate_line_item_display('B', 'Back', box_width))
-		elif mode == 'W':
+		elif options == 'W':
+			if display_menu:
+				print(generate_line_item_display('W', 'Write to text file', box_width))
+				print(generate_line_item_display('B', 'Back', box_width))
+
 			prompt_tail = allowed_key('W') + ' or ' + allowed_key('B')
-			print(generate_line_item_display('W', 'Write to text file', box_width))
-			print(generate_line_item_display('B', 'Back', box_width))
 		else:
 			prompt_tail = ''
 
 		prompt_tail += ' or ' + allowed_key('Q')
-		print(generate_line_item_display('Q', 'Quit', box_width))
-
-		print(footer_line)
-		user_selection = input('   select (' + prompt_head + prompt_tail + '): ')
+		
+		if display_menu:
+			print(generate_line_item_display('Q', 'Quit', box_width))
+			print(footer_line)
+			
+		user_selection = input(' ' * 3 + 'select (' + prompt_head + prompt_tail + '): ')
 		print()
 
-		# allowed keys based on 'mode'
+		display_menu = False
+		
+		# allowed keys based on 'options'
 		if not user_selection.isdigit():
 			if user_selection == 'Q' or user_selection == 'q':
 				sys.exit()
 
-			if mode == 'B':
+			if options == 'B':
 				if user_selection == 'B' or user_selection == 'b':
 					user_selection = 0
 					break
-			elif mode == 'W':
+			elif options == 'W':
 				if user_selection == 'W' or user_selection == 'w':
 					user_selection = -1
 					break
@@ -94,8 +108,6 @@ def menu(title, records, record_name, mode):
 			if int(user_selection) > 0 and int(user_selection) <= total:
 				break
 		
-		clear_display()
-			
 	return user_selection
 
 def allowed_key(text):
@@ -209,7 +221,8 @@ def main(argv):
 		while True:
 			# query user
 			clear_display()
-			user_selection = menu(db_name_categories, db_tab_categories, db_col_name, '')
+			print(' ' * 2 + script_details + '\n')
+			user_selection = menu(db_name_categories, db_tab_categories, db_col_name, '', False)
 
 			if user_selection == 0:
 				break
@@ -220,18 +233,17 @@ def main(argv):
 				
 				cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_category_id + ' = \"' + selected_category_id + '\"')
 				db_tab_entry = cur.fetchall()
-				
+
 				# entries loop
 				while True:
 					# query user
 					clear_display()
-					user_selection = menu(db_category, db_tab_entry, db_col_name, 'B')
+					print(' ' * 2 + script_details + '\n')
+					user_selection = menu(db_category, db_tab_entry, db_col_name, 'B', False)
 
 					if user_selection == 0:
 						break
 					else:
-						clear_display()
-						
 						row = db_tab_entry[int(user_selection) - 1]
 						selected_entry_id = row[db_col_id]
 						db_entry = row[db_col_name]
@@ -240,7 +252,7 @@ def main(argv):
 						db_tab_fields = cur.fetchall()
 
 						content = ''
-
+						
 						for field in db_tab_fields:
 							if field[db_col_type_id]:
 								for field_types in db_tab_types:
@@ -253,18 +265,24 @@ def main(argv):
 
 						header_line, footer_line = generate_lines_full_width_display(db_entry)
 						
+						clear_display()
+						print(' ' * 2 + script_details + '\n')
 						print(header_line)
 						print(content)
 						print(footer_line)
 						print()
 
+						prompt_only = False
+						
 						# single entry loop
 						while True:
 							# query user
-							user_selection = menu('', '', '', 'W')
+							user_selection = menu('', '', '', 'W', prompt_only)
 
 							if user_selection == -1:
 								write_entry_to_file(db_entry, content)
+								print()
+								prompt_only = True
 							elif user_selection == 0:
 								break
 
