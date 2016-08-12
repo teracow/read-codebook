@@ -192,15 +192,23 @@ def get_db_search(text):
 		cur.execute('SELECT ' + db_col_name + ', ' + db_col_value + ' FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE value LIKE \"%' + text + '%\"')	
 	return cur.fetchall()
 
-def get_db_entry(table, column, id):
+def get_db_entry(id):
 	con = lite.connect(database_pathfile)
-	
+
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()    
-		cur.execute('SELECT * FROM ' + table + ' WHERE ' + column + ' = \"' + id + '\"')
 		
-	return cur.fetchall()
+		# try joining fields to field types first. This will return none for notes as they don't have a field type set.
+		cur.execute('SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE ' + db_col_entry_id + ' = \"' + id + '\"')
+		result = cur.fetchall()
+						
+		if len(result) == 0:
+			# this may be a note, so try query again without join
+			cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + id + '\"')
+			result = cur.fetchall()
+		
+	return result
 
 def get_db_entries(table, column, id):
 	con = lite.connect(database_pathfile)
@@ -254,10 +262,6 @@ def main(argv):
 		print('! File not found! [{}]'.format(database_pathfile))
 		sys.exit(1)
 	
-	# field types
-	types_table = get_db_table(db_name_types)
-
-	# categories
 	categories_table = get_db_table(db_name_categories)
 
 	current_view = 'categories'
@@ -306,19 +310,17 @@ def main(argv):
 				entry_row = entries_table[int(selected_entry_index) - 1]
 				selected_entry_id = entry_row[db_col_id]
 				selected_entry_name = entry_row[db_col_name]
-				fields_table = get_db_entry(db_name_fields, db_col_entry_id, selected_entry_id)
+				fields_table = get_db_entry(selected_entry_id)
 				field_content = ''
 				header_line, footer_line = generate_lines_full_width_display(selected_entry_name)
 				
 				for field in fields_table:
 					if field[db_col_type_id]:
-						for field_types in types_table:
-							if field_types[db_col_id] == field[db_col_type_id]:
-								field_content += "{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value])
-								break
+						field_content += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
 					else:
 						# appears that notes don't have a field type ID
 						field_content = field[db_col_value]
+						break
 
 				current_view = 'entry'
 					
