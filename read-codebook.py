@@ -146,6 +146,9 @@ def generate_lines_variable_width_display(title, records, record_index):
 		if item_width > box_width:
 			box_width = item_width
 	
+	if (len(title) + 7) > box_width:
+		box_width = len(title) + 7
+	
 	if title:
 		header_line = ' ┌' + '─' * 4 + '┤ ' + bold_title(title) + ' ├' + '─' * (box_width - 4 - 4 - len(title) + index_space) + '┐'
 		separator_line = ' ├' + '─' * ((box_width) + index_space) + '┤'
