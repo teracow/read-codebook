@@ -99,7 +99,17 @@ if [ -e "$unencrypted_pathfile" ] ; then
 fi
 
 echo -n "? Enter your CodeBook passphrase: "
-read -r passphrase
+
+# http://stackoverflow.com/questions/4316730/linux-scripting-hiding-user-input-on-terminal
+while IFS= read -r -s -n1 pass; do
+	if [[ -z $pass ]]; then
+		echo
+		break
+	else
+		echo -n '*'
+		passphrase+=$pass
+	fi
+done
 
 sql_cmd="PRAGMA key = '$passphrase'; ATTACH DATABASE '$unencrypted_pathfile' AS plaintext KEY ''; SELECT sqlcipher_export('plaintext'); DETACH DATABASE plaintext;"
 
@@ -110,13 +120,13 @@ echo "$sql_cmd" | "$decrypter" "$encrypted_pathfile" > /dev/null 2>&1
 if [ "$?" -eq "0" ] ; then
 	echo "done!"
 
-	echo -n "? Open in [$reader] ? (y/n) "
+	echo -n "? Open file in [$reader] ? (y/n) "
 	read -n 1 result
 	echo
 
 	if [ "$result" == "y" ] || [ "$result" == "Y"  ] ; then
 		"$reader_pathfile" -i "$unencrypted_pathfile"
-		echo -n "? Delete [$unencrypted_pathfile] ? (y/n) "
+		echo -n "? Delete file [$unencrypted_pathfile] ? (y/n) "
 		read -n 1 result
 		echo
 
