@@ -49,18 +49,3 @@ or, if the database file has already been decrypted:
 
 
 Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email me](mailto:teracow@gmail.com)
-
----
-###**Known Issues:**
-
-- (2016-08-12) - None.
-
----
-###**Work-in-Progress:**
-
-- (2016-08-12) - 'Search' function 
- 
----
-###**To-Do List:**
-
-- (2016-08-12) - Things ... but nothing comes to mind ...

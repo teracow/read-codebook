@@ -50,6 +50,9 @@ def menu(title, records, record_name, options, prompt_only):
 		display_menu = True
 
 	while True:
+		prompt_head = ''
+		prompt_tail = ''
+		
 		if display_menu: 
 			print(header_line)
 
@@ -59,24 +62,24 @@ def menu(title, records, record_name, options, prompt_only):
 		if total > 0:
 			if display_menu: print(separator_line)
 
-			prompt_head = allowed_key('1') + ' to ' + allowed_key(str(total)) 
-		else:
-			prompt_head = ''
+			prompt_head += allowed_key('1') + ' to ' + allowed_key(str(total)) + ' or '
 
-		if options == 'B':
+		if 'S' in options:
+			if display_menu: print(generate_line_item_display('S', 'Search', box_width))
+				
+			prompt_tail += allowed_key('S') + ' or '
+
+		if 'W' in options:
+			if display_menu: print(generate_line_item_display('W', 'Write to text file', box_width))
+
+			prompt_tail += allowed_key('W') + ' or '
+
+		if 'B' in options:
 			if display_menu: print(generate_line_item_display('B', 'Back', box_width))
 
-			prompt_tail = ' or ' + allowed_key('B')
-		elif options == 'W':
-			if display_menu:
-				print(generate_line_item_display('W', 'Write to text file', box_width))
-				print(generate_line_item_display('B', 'Back', box_width))
-
-			prompt_tail = allowed_key('W') + ' or ' + allowed_key('B')
-		else:
-			prompt_tail = ''
-
-		prompt_tail += ' or ' + allowed_key('Q')
+			prompt_tail += allowed_key('B') + ' or '
+		
+		prompt_tail += allowed_key('Q')
 		
 		if display_menu:
 			print(generate_line_item_display('Q', 'Quit', box_width))
@@ -84,30 +87,33 @@ def menu(title, records, record_name, options, prompt_only):
 			
 		user_selection = input(' ' * 3 + 'select (' + prompt_head + prompt_tail + '): ')
 		print()
-
-		display_menu = False
 		
 		# allowed keys based on 'options'
 		if not user_selection.isdigit():
 			if user_selection == 'Q' or user_selection == 'q':
 				sys.exit()
 
-			if options == 'B':
+			if 'B' in options:
 				if user_selection == 'B' or user_selection == 'b':
 					user_selection = 0
 					break
-			elif options == 'W':
+			
+			if 'W' in options:
 				if user_selection == 'W' or user_selection == 'w':
 					user_selection = -1
 					break
-				elif user_selection == 'B' or user_selection == 'b':
-					user_selection = 0
+
+			if 'S' in options:
+				if user_selection == 'S' or user_selection == 's':
+					user_selection = -2
 					break
 					
 		else:
 			if int(user_selection) > 0 and int(user_selection) <= total:
 				break
 		
+		display_menu = False			# don't re-display menu - only show the prompt
+
 	return user_selection
 
 def allowed_key(text):
@@ -175,9 +181,39 @@ def clear_display():
 	print('\033c')
 	
 	return
+
+def get_db_search(text):
+	con = lite.connect(input_pathfile)
+
+	with con:
+		con.row_factory = lite.Row
+		cur = con.cursor()    
+		cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_value + ' LIKE \"%' + text + '%\"')
 	
+	return cur.fetchall()
+
+def get_db_entries(table, column, row_id):
+	con = lite.connect(input_pathfile)
+	
+	with con:
+		con.row_factory = lite.Row
+		cur = con.cursor()    
+		cur.execute('SELECT * FROM ' + table + ' WHERE ' + column + ' = \"' + row_id + '\"')
+		
+	return cur.fetchall()
+
+def get_db_table(table):
+	con = lite.connect(input_pathfile)
+	
+	with con:
+		con.row_factory = lite.Row
+		cur = con.cursor()    
+		cur.execute('SELECT * FROM ' + table)
+
+	return cur.fetchall()
+
 def main(argv):
-	global db_tab_types, db_tab_fields
+	global db_tab_types, db_tab_fields, input_pathfile
 	help_message = './read-codebook.py -i <inputfile>'
 	input_pathfile = ''
 
@@ -208,88 +244,99 @@ def main(argv):
 		print('! File not found! [{}]'.format(input_pathfile))
 		sys.exit(1)
 	
-	con = lite.connect(input_pathfile)
-	
-	with con:
-		con.row_factory = lite.Row
-		cur = con.cursor()    
-	
-		# retrieve field types
-		cur.execute('SELECT * FROM ' + db_name_types)
-		db_tab_types = cur.fetchall()
+	# field types
+	db_tab_types = get_db_table(db_name_types)
 
-		# retrieve categories
-		cur.execute('SELECT * FROM ' + db_name_categories)
-		db_tab_categories = cur.fetchall()
+	# categories
+	db_tab_categories = get_db_table(db_name_categories)
 
-		# categories loop
-		while True:
+	current_view = 'categories'
+	previous_view = current_view
+
+	while True:
+		if current_view == 'categories':
 			# query user
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-			user_selection = menu(db_name_categories, db_tab_categories, db_col_name, '', False)
+			category_selection = menu(db_name_categories, db_tab_categories, db_col_name, 'S', False)
 
-			if user_selection == 0:
-				break
+			if category_selection == -2:
+				previous_view = current_view
+				current_view = 'search'
 			else:
-				row = db_tab_categories[int(user_selection) - 1]
-				selected_category_id = row[db_col_id]
-				db_category = row[db_col_name]
-				
-				cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_category_id + ' = \"' + selected_category_id + '\"')
-				db_tab_entry = cur.fetchall()
+				current_view = 'entries'
+	
+		if current_view == 'search':
+			search_text = input(' ' * 3 + 'enter search word: ')
+			print()
 
-				# entries loop
-				while True:
-					# query user
-					clear_display()
-					print(' ' * 2 + script_details + '\n')
-					user_selection = menu(db_category, db_tab_entry, db_col_name, 'B', False)
+			db_search = get_db_search(search_text)
 
-					if user_selection == 0:
-						break
-					else:
-						row = db_tab_entry[int(user_selection) - 1]
-						selected_entry_id = row[db_col_id]
-						db_entry = row[db_col_name]
-						
-						cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + selected_entry_id + '\"')
-						db_tab_fields = cur.fetchall()
+			search_selection = menu('Search results', db_search, db_col_value, 'B', False)
 
-						content = ''
-						
-						for field in db_tab_fields:
-							if field[db_col_type_id]:
-								for field_types in db_tab_types:
-									if field_types[db_col_id] == field[db_col_type_id]:
-										content += "{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value])
-										break
-							else:
-								# appears that notes don't have a field type ID
-								content = field[db_col_value]
+			if search_selection == 0:
+				current_view = previous_view
+			else:
+				current_view = 'entries'
+	
+		if current_view == 'entries':
+			row = db_tab_categories[int(category_selection) - 1]
+			selected_category_id = row[db_col_id]
+			db_category = row[db_col_name]
+			db_tab_entry = get_db_entries(db_name_entries, db_col_category_id, selected_category_id)
 
-						header_line, footer_line = generate_lines_full_width_display(db_entry)
-						
-						clear_display()
-						print(' ' * 2 + script_details + '\n')
-						print(header_line)
-						print(content)
-						print(footer_line)
-						print()
+			# query user
+			clear_display()
+			print(' ' * 2 + script_details + '\n')
+			entry_selection = menu(db_category, db_tab_entry, db_col_name, 'SB', False)
 
-						prompt_only = False
-						
-						# single entry loop
-						while True:
-							# query user
-							user_selection = menu('', '', '', 'W', prompt_only)
+			if entry_selection == 0:
+				current_view = 'categories'
+			elif entry_selection == -2:
+				previous_view = current_view
+				current_view = 'search'
+			else:
+				current_view = 'entry'
+					
+		if current_view == 'entry':
+			row = db_tab_entry[int(entry_selection) - 1]
+			selected_entry_id = row[db_col_id]
+			db_entry = row[db_col_name]
+			db_tab_fields = get_db_entries(db_name_fields, db_col_entry_id, selected_entry_id)
+			field_content = ''
+			header_line, footer_line = generate_lines_full_width_display(db_entry)
+			
+			for field in db_tab_fields:
+				if field[db_col_type_id]:
+					for field_types in db_tab_types:
+						if field_types[db_col_id] == field[db_col_type_id]:
+							field_content += "{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value])
+							break
+				else:
+					# appears that notes don't have a field type ID
+					field_content = field[db_col_value]
 
-							if user_selection == -1:
-								write_entry_to_file(db_entry, content)
-								print()
-								prompt_only = True
-							elif user_selection == 0:
-								break
+			clear_display()
+			print(' ' * 2 + script_details + '\n')
+			print(header_line)
+			print(field_content)
+			print(footer_line)
+			print()
+
+			prompt_only = False
+			
+			# single entry loop
+			while True:
+				# query user
+				user_selection = menu('', '', '', 'WB', prompt_only)
+
+				if user_selection == -1:
+					write_entry_to_file(db_entry, field_content)
+					print()
+					prompt_only = True
+				elif user_selection == 0:
+					current_view = 'entries'
+					break
 
 if __name__ == '__main__':
 	main(sys.argv[1:])
