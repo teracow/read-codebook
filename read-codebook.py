@@ -183,7 +183,7 @@ def clear_display():
 	return
 
 def get_db_search(text):
-	con = lite.connect(input_pathfile)
+	con = lite.connect(database_pathfile)
 
 	with con:
 		con.row_factory = lite.Row
@@ -193,7 +193,7 @@ def get_db_search(text):
 	return cur.fetchall()
 
 def get_db_entries(table, column, row_id):
-	con = lite.connect(input_pathfile)
+	con = lite.connect(database_pathfile)
 	
 	with con:
 		con.row_factory = lite.Row
@@ -203,7 +203,7 @@ def get_db_entries(table, column, row_id):
 	return cur.fetchall()
 
 def get_db_table(table):
-	con = lite.connect(input_pathfile)
+	con = lite.connect(database_pathfile)
 	
 	with con:
 		con.row_factory = lite.Row
@@ -213,9 +213,9 @@ def get_db_table(table):
 	return cur.fetchall()
 
 def main(argv):
-	global db_tab_types, db_tab_fields, input_pathfile
+	global types_table, database_pathfile
 	help_message = './read-codebook.py -i <inputfile>'
-	input_pathfile = ''
+	database_pathfile = ''
 
 	try:
 		opts, args = getopt.getopt(argv,'hvi:',['help','version','input-file='])
@@ -231,36 +231,35 @@ def main(argv):
 			print(script_details)
 			sys.exit()
 		elif opt in ('-i', '--input-file'):
-			input_pathfile = arg
+			database_pathfile = arg
 
-	if not input_pathfile:
+	if not database_pathfile:
 		print(help_message)
 		sys.exit(1)
 
 	print(script_details)
 	print()
 	
-	if not os.path.exists(input_pathfile):
-		print('! File not found! [{}]'.format(input_pathfile))
+	if not os.path.exists(database_pathfile):
+		print('! File not found! [{}]'.format(database_pathfile))
 		sys.exit(1)
 	
 	# field types
-	db_tab_types = get_db_table(db_name_types)
+	types_table = get_db_table(db_name_types)
 
 	# categories
-	db_tab_categories = get_db_table(db_name_categories)
+	categories_table = get_db_table(db_name_categories)
 
 	current_view = 'categories'
 	previous_view = current_view
 
 	while True:
 		if current_view == 'categories':
-			# query user
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-			category_selection = menu(db_name_categories, db_tab_categories, db_col_name, 'S', False)
+			selected_category = menu(db_name_categories, categories_table, db_col_name, 'S', False)
 
-			if category_selection == -2:
+			if selected_category == -2:
 				previous_view = current_view
 				current_view = 'search'
 			else:
@@ -271,35 +270,33 @@ def main(argv):
 			print()
 
 			db_search = get_db_search(search_text)
+			selected_search = menu('Search results', db_search, db_col_value, 'B', False)
 
-			search_selection = menu('Search results', db_search, db_col_value, 'B', False)
-
-			if search_selection == 0:
+			if selected_search == 0:
 				current_view = previous_view
 			else:
 				current_view = 'entries'
 	
 		if current_view == 'entries':
-			row = db_tab_categories[int(category_selection) - 1]
+			row = categories_table[int(selected_category) - 1]
 			selected_category_id = row[db_col_id]
 			db_category = row[db_col_name]
 			db_tab_entry = get_db_entries(db_name_entries, db_col_category_id, selected_category_id)
 
-			# query user
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-			entry_selection = menu(db_category, db_tab_entry, db_col_name, 'SB', False)
+			selected_entry = menu(db_category, db_tab_entry, db_col_name, 'SB', False)
 
-			if entry_selection == 0:
+			if selected_entry == 0:
 				current_view = 'categories'
-			elif entry_selection == -2:
+			elif selected_entry == -2:
 				previous_view = current_view
 				current_view = 'search'
 			else:
 				current_view = 'entry'
 					
 		if current_view == 'entry':
-			row = db_tab_entry[int(entry_selection) - 1]
+			row = db_tab_entry[int(selected_entry) - 1]
 			selected_entry_id = row[db_col_id]
 			db_entry = row[db_col_name]
 			db_tab_fields = get_db_entries(db_name_fields, db_col_entry_id, selected_entry_id)
@@ -308,7 +305,7 @@ def main(argv):
 			
 			for field in db_tab_fields:
 				if field[db_col_type_id]:
-					for field_types in db_tab_types:
+					for field_types in types_table:
 						if field_types[db_col_id] == field[db_col_type_id]:
 							field_content += "{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value])
 							break
