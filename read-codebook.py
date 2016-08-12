@@ -193,10 +193,10 @@ def get_db_search(text):
 		cur = con.cursor()    
 		# SELECT * FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE "%email%"
 		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE value LIKE \"%' + text + '%\"')	
-
+		
 	return cur.fetchall()
 
-def get_db_entry(id):
+def get_db_fields_from_entry(entry_id):
 	con = lite.connect(database_pathfile)
 
 	with con:
@@ -204,35 +204,35 @@ def get_db_entry(id):
 		cur = con.cursor()    
 		
 		# try joining fields to field types first. This will return none for notes as they don't have a field type set.
-		# SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE entry_id = "328658"
-		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_types + ' ON ' + db_name_fields + '.' + db_col_type_id + ' = ' + db_name_types + '.' + db_col_id + ' WHERE ' + db_col_entry_id + ' = \"' + id + '\"')
+		# SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE entry.id = "328658"
+		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_types + ' ON ' + db_name_fields + '.' + db_col_type_id + ' = ' + db_name_types + '.' + db_col_id + ' WHERE ' + db_col_entry_id + ' = \"' + entry_id + '\"')
 		result = cur.fetchall()
-						
+		
 		if len(result) == 0:
 			# this may be a note, so try query again without join
 			# SELECT * FROM fields WHERE entry_id = "328456"
-			cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + id + '\"')
+			cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + entry_id + '\"')
 			result = cur.fetchall()
-		
+			
 	return result
 
-def get_db_entries(table, column, id):
+def get_db_entries_from_category(category_id):
 	con = lite.connect(database_pathfile)
 	
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()    
-		cur.execute('SELECT * FROM ' + table + ' WHERE ' + column + ' = \"' + id + '\"' + ' ORDER BY ' + db_col_name)
+		cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_category_id + ' = \"' + category_id + '\"' + ' ORDER BY ' + db_col_name)
 		
 	return cur.fetchall()
 
-def get_db_table(table):
+def get_db_categories():
 	con = lite.connect(database_pathfile)
 	
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()    
-		cur.execute('SELECT ' + db_col_id + ', ' + db_col_name + ' FROM ' + table + ' ORDER BY ' + db_col_name)
+		cur.execute('SELECT ' + db_col_id + ', ' + db_col_name + ' FROM ' + db_name_categories + ' ORDER BY ' + db_col_name)
 
 	return cur.fetchall()
 
@@ -268,8 +268,7 @@ def main(argv):
 		print('! File not found! [{}]'.format(database_pathfile))
 		sys.exit(1)
 	
-	categories_table = get_db_table(db_name_categories)
-
+	all_categories = get_db_categories()
 	previous_views_stack = []			# create stack
 	current_view = 'categories'
 	
@@ -277,31 +276,31 @@ def main(argv):
 		if current_view == 'categories':
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-			selected_category_index = menu(db_name_categories, categories_table, db_col_name, 'S', False)
+			category_index = menu(db_name_categories, all_categories, db_col_name, 'S', False)
 
 			previous_views_stack.append(current_view)
 			
-			if selected_category_index == -2:
+			if category_index == -2:
 				current_view = 'search'
 			else:
-				category_row = categories_table[int(selected_category_index) - 1]
-				category_id = category_row[db_col_id]
-				entries_table = get_db_entries(db_name_entries, db_col_category_id, category_id)
 				current_view = 'entries'
 	
 		if current_view == 'entries':
+			category_row = all_categories[int(category_index) - 1]
+			category_entries = get_db_entries_from_category(category_row[db_col_id])
+
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-			selected_entry_index = menu(category_row[db_col_name], entries_table, db_col_name, 'SB', False)
+			entry_index = menu(category_row[db_col_name], category_entries, db_col_name, 'SB', False)
 
-			if selected_entry_index == 0:
+			if entry_index == 0:
 				current_view = previous_views_stack.pop()
-			elif selected_entry_index == -2:
+			elif entry_index == -2:
 				previous_views_stack.append(current_view)
 				current_view = 'search'
 			else:
 				previous_views_stack.append(current_view)
-				current_view = 'entry'
+				current_view = 'fields'
 					
 		if current_view == 'search':
 			try:
@@ -311,30 +310,62 @@ def main(argv):
 				current_view = previous_views_stack.pop()
 				
 		if current_view == 'search results':
+			search_entries = get_db_search(search_text)
+
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-
-			entries_table = get_db_search(search_text)
-			selected_entry_index = menu('Search results for \"' + search_text + '\"', entries_table, db_col_name, 'B', False)
+			entry_index = menu('Search results for \"' + search_text + '\"', search_entries, db_col_name, 'B', False)
 			
-			# disable this when search works properly!
-			#selected_entry_index = 0
-
-			if selected_entry_index == 0:
+			if entry_index == 0:
 				current_view = previous_views_stack.pop()
 			else:
 				previous_views_stack.append(current_view)
-				current_view = 'entry'
+				entry_row = search_entries[int(entry_index) - 1]
+				entry_id = entry_row[db_col_entry_id]
+				entry_name = entry_row[db_col_name]
+				entry_fields = get_db_fields_from_entry(entry_id)
+				field_content = ''
+				header_line, footer_line = generate_lines_full_width_display(entry_name)
+				
+				for field in entry_fields:
+					if field[db_col_type_id]:
+						field_content += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
+					else:
+						# appears that notes don't have a field type ID
+						field_content = field[db_col_value]
+						break
+				
+				clear_display()
+				print(' ' * 2 + script_details + '\n')
+				print(header_line)
+				print(field_content)
+				print(footer_line)
+				print()
 
-		if current_view == 'entry':
-			entry_row = entries_table[int(selected_entry_index) - 1]
-			selected_entry_id = entry_row[db_col_id]
-			selected_entry_name = entry_row[db_col_name]
-			fields_table = get_db_entry(selected_entry_id)
+				prompt_only = False
+				
+				# single entry loop
+				while True:
+					# query user
+					user_selection = menu('', '', '', 'WB', prompt_only)
+
+					if user_selection == -1:
+						write_entry_to_file(entry_name, field_content)
+						print()
+						prompt_only = True
+					elif user_selection == 0:
+						current_view = previous_views_stack.pop()
+						break
+
+		if current_view == 'fields':
+			entry_row = category_entries[int(entry_index) - 1]
+			entry_id = entry_row[db_col_id]
+			entry_name = entry_row[db_col_name]
+			entry_fields = get_db_fields_from_entry(entry_id)
 			field_content = ''
-			header_line, footer_line = generate_lines_full_width_display(selected_entry_name)
+			header_line, footer_line = generate_lines_full_width_display(entry_name)
 			
-			for field in fields_table:
+			for field in entry_fields:
 				if field[db_col_type_id]:
 					field_content += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
 				else:
@@ -357,7 +388,7 @@ def main(argv):
 				user_selection = menu('', '', '', 'WB', prompt_only)
 
 				if user_selection == -1:
-					write_entry_to_file(selected_entry_name, field_content)
+					write_entry_to_file(entry_name, field_content)
 					print()
 					prompt_only = True
 				elif user_selection == 0:
