@@ -1,6 +1,6 @@
 ![icon](images/icon.png) read-codebook.py
 ---
-This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shell\))** and **[Python](https://en.wikipedia.org/wiki/Python_(programming_language))** scripts to decrypt and read through a **[Codebook](https://www.zetetic.net/codebook/)** database '**strip.db**' file. The idea is to quickly traverse the dB structure to get to the required infomation. This is all console based and is simple to use. No modifications to the database are possible.
+This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shell\))** and **[Python](https://en.wikipedia.org/wiki/Python_(programming_language))** scripts to decrypt and read through a **[Codebook](https://www.zetetic.net/codebook/)** database '**strip.db**' file. The idea is to quickly traverse the dB structure to get to required infomation. This is entirely console based and is easy to use. No modifications to the database are possible.
 
 ---
 ###**Description:**
@@ -11,7 +11,7 @@ This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shel
 
 3. Enter the matching **[Codebook](https://www.zetetic.net/codebook/)** passphrase for '**strip.db**'.
 
-3. A decrypted (plaintext) database is then written to '**/dev/shm/plaintext.db**'.
+3. A decrypted (plaintext) database is then written to '**/dev/shm/decrypt-strip/plaintext.db**'.
 
 4. Then open this plaintext dB using the included Python reader to examine the contents. There is an option to write particular entries to text files in the working directory.
 
@@ -58,7 +58,7 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Work-in-Progress:**
 
-- (2016-08-12) - Nothing specific ... 
+- (2016-08-12) - 'Search' function 
  
 ---
 ###**To-Do List:**
