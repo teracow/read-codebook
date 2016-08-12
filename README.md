@@ -53,5 +53,5 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-12) - search results inactive when selected. Working on it ...
+- (2016-08-12) - None.
   
