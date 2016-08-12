@@ -90,21 +90,21 @@ def menu(title, table, column, options, prompt_only):
 		
 		# allowed keys based on 'options'
 		if not user_selection.isdigit():
-			if user_selection == 'Q' or user_selection == 'q':
+			if user_selection.upper() == 'Q':
 				sys.exit()
 
 			if 'B' in options:
-				if user_selection == 'B' or user_selection == 'b':
+				if user_selection.upper() == 'B':
 					user_selection = 0
 					break
 			
 			if 'W' in options:
-				if user_selection == 'W' or user_selection == 'w':
+				if user_selection.upper() == 'W':
 					user_selection = -1
 					break
 
 			if 'S' in options:
-				if user_selection == 'S' or user_selection == 's':
+				if user_selection.upper() == 'S':
 					user_selection = -2
 					break
 					
