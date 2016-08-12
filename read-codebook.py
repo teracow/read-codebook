@@ -40,9 +40,9 @@ colour_green_bright = '\033[1;32;40m'
 colour_red_bright = '\033[1;31;40m'
 colour_reset = '\033[0m'
 
-def menu(title, records, record_name, options, prompt_only):
+def menu(title, records, record_index, options, prompt_only):
 	total = len(records)
-	header_line, separator_line, footer_line, box_width = generate_lines_variable_width_display(title, records, record_name)
+	header_line, separator_line, footer_line, box_width = generate_lines_variable_width_display(title, records, record_index)
 
 	if prompt_only:
 		display_menu = False
@@ -57,7 +57,7 @@ def menu(title, records, record_name, options, prompt_only):
 			print(header_line)
 
 			for index, record in enumerate(records):
-				print(generate_line_item_display(index + 1, record[record_name], box_width))
+				print(generate_line_item_display(index + 1, record[record_index], box_width))
 
 		if total > 0:
 			if display_menu: print(separator_line)
@@ -132,13 +132,13 @@ def generate_line_item_display(index, text, box_width):
 
 	return ' │ ({}) {} │'.format(allowed_key(str(index)), text + ' ' * (box_width - calc_text_display_width(index, text)))
 	
-def generate_lines_variable_width_display(title, records, record_name):
+def generate_lines_variable_width_display(title, records, record_index):
 	box_width = 32			# set a minimum size
 	index_space = 1			# this is the space between the left border and the index parentheses - only used to calculate box width
 	
 	# find longest display item so box width can be calculated
 	for index, record in enumerate(records):
-		item_width = calc_text_display_width(index, record[record_name])
+		item_width = calc_text_display_width(index, record[record_index])
 		
 		if item_width > box_width:
 			box_width = item_width
@@ -188,17 +188,27 @@ def get_db_search(text):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()    
-		cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_value + ' LIKE \"%' + text + '%\"')
-	
+		# SELECT name, value FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE '%email%';
+		cur.execute('SELECT ' + db_col_name + ', ' + db_col_value + ' FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE value LIKE \"%' + text + '%\"')	
 	return cur.fetchall()
 
-def get_db_entries(table, column, row_id):
+def get_db_entry(table, column, id):
 	con = lite.connect(database_pathfile)
 	
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()    
-		cur.execute('SELECT * FROM ' + table + ' WHERE ' + column + ' = \"' + row_id + '\"')
+		cur.execute('SELECT * FROM ' + table + ' WHERE ' + column + ' = \"' + id + '\"')
+		
+	return cur.fetchall()
+
+def get_db_entries(table, column, id):
+	con = lite.connect(database_pathfile)
+	
+	with con:
+		con.row_factory = lite.Row
+		cur = con.cursor()    
+		cur.execute('SELECT * FROM ' + table + ' WHERE ' + column + ' = \"' + id + '\"' + ' ORDER BY ' + db_col_name)
 		
 	return cur.fetchall()
 
@@ -208,7 +218,7 @@ def get_db_table(table):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()    
-		cur.execute('SELECT * FROM ' + table)
+		cur.execute('SELECT ' + db_col_id + ', ' + db_col_name + ' FROM ' + table + ' ORDER BY ' + db_col_name)
 
 	return cur.fetchall()
 
@@ -257,15 +267,15 @@ def main(argv):
 		if current_view == 'categories':
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-			selected_category = menu(db_name_categories, categories_table, db_col_name, 'S', False)
+			selected_category_index = menu(db_name_categories, categories_table, db_col_name, 'S', False)
 
-			if selected_category == -2:
+			if selected_category_index == -2:
 				previous_view = current_view
 				current_view = 'search'
 			else:
-				category_row = categories_table[int(selected_category) - 1]
-				selected_category_id = category_row[db_col_id]
-				entries_table = get_db_entries(db_name_entries, db_col_category_id, selected_category_id)
+				category_row = categories_table[int(selected_category_index) - 1]
+				category_id = category_row[db_col_id]
+				entries_table = get_db_entries(db_name_entries, db_col_category_id, category_id)
 				current_view = 'entries'
 	
 		if current_view == 'search':
@@ -275,9 +285,9 @@ def main(argv):
 			print(' ' * 2 + script_details + '\n')
 
 			db_search = get_db_search(search_text)
-			selected_search = menu('Search results for \"' + search_text + '\"', db_search, db_col_value, 'B', False)
+			selected_search_index = menu('Search results for \"' + search_text + '\"', db_search, db_col_value, 'B', False)
 
-			if selected_search == 0:
+			if selected_search_index == 0:
 				current_view = previous_view
 			else:
 				current_view = 'entries'
@@ -285,18 +295,18 @@ def main(argv):
 		if current_view == 'entries':
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-			selected_entry = menu(category_row[db_col_name], entries_table, db_col_name, 'SB', False)
+			selected_entry_index = menu(category_row[db_col_name], entries_table, db_col_name, 'SB', False)
 
-			if selected_entry == 0:
+			if selected_entry_index == 0:
 				current_view = 'categories'
-			elif selected_entry == -2:
+			elif selected_entry_index == -2:
 				previous_view = current_view
 				current_view = 'search'
 			else:
-				entry_row = entries_table[int(selected_entry) - 1]
+				entry_row = entries_table[int(selected_entry_index) - 1]
 				selected_entry_id = entry_row[db_col_id]
 				selected_entry_name = entry_row[db_col_name]
-				fields_table = get_db_entries(db_name_fields, db_col_entry_id, selected_entry_id)
+				fields_table = get_db_entry(db_name_fields, db_col_entry_id, selected_entry_id)
 				field_content = ''
 				header_line, footer_line = generate_lines_full_width_display(selected_entry_name)
 				
