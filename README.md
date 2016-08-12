@@ -9,7 +9,7 @@ This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shel
 
 2. Run `./decrypt-strip.sh -i strip.db`
 
-3. Enter the matching **Codebook** passphrase for '**strip.db**'.
+3. Enter the matching **[Codebook](https://www.zetetic.net/codebook/)** passphrase for '**strip.db**'.
 
 3. A decrypted (plaintext) database is then written to '**/dev/shm/plaintext.db**'.
 
@@ -22,7 +22,7 @@ This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shel
 
 As this compromises the security of the original database, it is recommended that this only be done in a secure environment (i.e. don't run this on Windows) and only if you understand why. I do not take any responsibilty for the integrity and security of your data. 
 
-These script were written for my convenience so that I can access the 'strip.db' file in the event that my iPhone is lost, stolen or damaged. Being able to do so means I'm more likely to store important information in my copy of the great **[Codebook](https://www.zetetic.net/codebook/)** app. ![smiley](images/smiley.png)
+These script were written for my convenience so that I can access the '**strip.db**' file in the event that my iPhone is lost, stolen or damaged. Being able to do so means I'm more likely to store important information in my copy of the great **[Codebook](https://www.zetetic.net/codebook/)** app. ![smiley](images/smiley.png)
 
 At this time, I've decided not to use pysqlcipher to reduce the dependance on other packages.
 
@@ -58,7 +58,7 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Work-in-Progress:**
 
-- (2016-08-11) - Lots! New project so many things to do! ![smiley](images/smiley.png)
+- (2016-08-12) - Nothing specific ... 
  
 ---
 ###**To-Do List:**
