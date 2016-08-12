@@ -283,12 +283,11 @@ def main(argv):
 			if category_index == -2:
 				current_view = 'search'
 			else:
+				category_row = all_categories[int(category_index) - 1]
+				category_entries = get_db_entries_from_category(category_row[db_col_id])
 				current_view = 'entries'
 	
 		if current_view == 'entries':
-			category_row = all_categories[int(category_index) - 1]
-			category_entries = get_db_entries_from_category(category_row[db_col_id])
-
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
 			entry_index = menu(category_row[db_col_name], category_entries, db_col_name, 'SB', False)
@@ -299,21 +298,20 @@ def main(argv):
 				previous_views_stack.append(current_view)
 				current_view = 'search'
 			else:
-				previous_views_stack.append(current_view)
-				current_view = 'fields'
 				entry_row = category_entries[int(entry_index) - 1]
 				entry_id = entry_row[db_col_id]
+				previous_views_stack.append(current_view)
+				current_view = 'fields'
 					
 		if current_view == 'search':
 			try:
 				search_text = input(' ' * 3 + 'enter search word: ')
+				search_entries = get_db_search(search_text)
 				current_view = 'search results'
 			except KeyboardInterrupt:
 				current_view = previous_views_stack.pop()
 				
 		if current_view == 'search results':
-			search_entries = get_db_search(search_text)
-
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
 			entry_index = menu('Search results for \"' + search_text + '\"', search_entries, db_col_name, 'B', False)
@@ -321,10 +319,10 @@ def main(argv):
 			if entry_index == 0:
 				current_view = previous_views_stack.pop()
 			else:
-				previous_views_stack.append(current_view)
-				current_view = 'fields'
 				entry_row = search_entries[int(entry_index) - 1]
 				entry_id = entry_row[db_col_entry_id]
+				previous_views_stack.append(current_view)
+				current_view = 'fields'
 
 		if current_view == 'fields':
 			entry_name = entry_row[db_col_name]
