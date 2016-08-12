@@ -301,6 +301,8 @@ def main(argv):
 			else:
 				previous_views_stack.append(current_view)
 				current_view = 'fields'
+				entry_row = category_entries[int(entry_index) - 1]
+				entry_id = entry_row[db_col_id]
 					
 		if current_view == 'search':
 			try:
@@ -320,46 +322,11 @@ def main(argv):
 				current_view = previous_views_stack.pop()
 			else:
 				previous_views_stack.append(current_view)
+				current_view = 'fields'
 				entry_row = search_entries[int(entry_index) - 1]
 				entry_id = entry_row[db_col_entry_id]
-				entry_name = entry_row[db_col_name]
-				entry_fields = get_db_fields_from_entry(entry_id)
-				field_content = ''
-				header_line, footer_line = generate_lines_full_width_display(entry_name)
-				
-				for field in entry_fields:
-					if field[db_col_type_id]:
-						field_content += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
-					else:
-						# appears that notes don't have a field type ID
-						field_content = field[db_col_value]
-						break
-				
-				clear_display()
-				print(' ' * 2 + script_details + '\n')
-				print(header_line)
-				print(field_content)
-				print(footer_line)
-				print()
-
-				prompt_only = False
-				
-				# single entry loop
-				while True:
-					# query user
-					user_selection = menu('', '', '', 'WB', prompt_only)
-
-					if user_selection == -1:
-						write_entry_to_file(entry_name, field_content)
-						print()
-						prompt_only = True
-					elif user_selection == 0:
-						current_view = previous_views_stack.pop()
-						break
 
 		if current_view == 'fields':
-			entry_row = category_entries[int(entry_index) - 1]
-			entry_id = entry_row[db_col_id]
 			entry_name = entry_row[db_col_name]
 			entry_fields = get_db_fields_from_entry(entry_id)
 			field_content = ''
