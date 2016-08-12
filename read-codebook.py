@@ -200,8 +200,13 @@ def main(argv):
 	if not input_pathfile:
 		print(help_message)
 		sys.exit(1)
-	
+
 	print(script_details)
+	print()
+	
+	if not os.path.exists(input_pathfile):
+		print('! File not found! [{}]'.format(input_pathfile))
+		sys.exit(1)
 	
 	con = lite.connect(input_pathfile)
 	
