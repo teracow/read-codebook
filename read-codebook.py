@@ -263,10 +263,14 @@ def main(argv):
 				previous_view = current_view
 				current_view = 'search'
 			else:
+				category_row = categories_table[int(selected_category) - 1]
+				selected_category_id = category_row[db_col_id]
+				entries_table = get_db_entries(db_name_entries, db_col_category_id, selected_category_id)
 				current_view = 'entries'
 	
 		if current_view == 'search':
 			search_text = input(' ' * 3 + 'enter search word: ')
+
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
 
@@ -279,14 +283,9 @@ def main(argv):
 				current_view = 'entries'
 	
 		if current_view == 'entries':
-			row = categories_table[int(selected_category) - 1]
-			selected_category_id = row[db_col_id]
-			db_category = row[db_col_name]
-			db_tab_entry = get_db_entries(db_name_entries, db_col_category_id, selected_category_id)
-
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
-			selected_entry = menu(db_category, db_tab_entry, db_col_name, 'SB', False)
+			selected_entry = menu(category_row[db_col_name], entries_table, db_col_name, 'SB', False)
 
 			if selected_entry == 0:
 				current_view = 'categories'
@@ -294,26 +293,26 @@ def main(argv):
 				previous_view = current_view
 				current_view = 'search'
 			else:
+				entry_row = entries_table[int(selected_entry) - 1]
+				selected_entry_id = entry_row[db_col_id]
+				selected_entry_name = entry_row[db_col_name]
+				fields_table = get_db_entries(db_name_fields, db_col_entry_id, selected_entry_id)
+				field_content = ''
+				header_line, footer_line = generate_lines_full_width_display(selected_entry_name)
+				
+				for field in fields_table:
+					if field[db_col_type_id]:
+						for field_types in types_table:
+							if field_types[db_col_id] == field[db_col_type_id]:
+								field_content += "{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value])
+								break
+					else:
+						# appears that notes don't have a field type ID
+						field_content = field[db_col_value]
+
 				current_view = 'entry'
 					
 		if current_view == 'entry':
-			row = db_tab_entry[int(selected_entry) - 1]
-			selected_entry_id = row[db_col_id]
-			db_entry = row[db_col_name]
-			db_tab_fields = get_db_entries(db_name_fields, db_col_entry_id, selected_entry_id)
-			field_content = ''
-			header_line, footer_line = generate_lines_full_width_display(db_entry)
-			
-			for field in db_tab_fields:
-				if field[db_col_type_id]:
-					for field_types in types_table:
-						if field_types[db_col_id] == field[db_col_type_id]:
-							field_content += "{}:\n\t{}\n".format(field_types[db_col_name], field[db_col_value])
-							break
-				else:
-					# appears that notes don't have a field type ID
-					field_content = field[db_col_value]
-
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
 			print(header_line)
@@ -329,7 +328,7 @@ def main(argv):
 				user_selection = menu('', '', '', 'WB', prompt_only)
 
 				if user_selection == -1:
-					write_entry_to_file(db_entry, field_content)
+					write_entry_to_file(selected_entry_name, field_content)
 					print()
 					prompt_only = True
 				elif user_selection == 0:
