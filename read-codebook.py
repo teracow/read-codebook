@@ -20,7 +20,7 @@ import sys
 import getopt
 import sqlite3 as lite
 
-script_details = 'read-codebook.py (2016-08-12)'
+script_details = 'read-codebook.py (2016-08-13)'
 
 db_name_categories = 'categories'
 db_name_entries = 'entries'
@@ -85,11 +85,18 @@ def menu(title, table, column, options, prompt_only):
 			print(generate_line_item_display('Q', 'Quit', box_width))
 			print(footer_line)
 			
-		user_selection = input(' ' * 3 + 'select (' + prompt_head + prompt_tail + '): ')
-		print()
+		try:
+			user_selection = input(' ' * 3 + 'select (' + prompt_head + prompt_tail + '): ')
+			print()
+		except KeyboardInterrupt:
+			print('\n')
+			sys.exit()
 		
 		# allowed keys based on 'options'
-		if not user_selection.isdigit():
+		if user_selection.isdigit():
+			if int(user_selection) > 0 and int(user_selection) <= total:
+				break
+		else:
 			if user_selection.upper() == 'Q':
 				sys.exit()
 
@@ -107,10 +114,6 @@ def menu(title, table, column, options, prompt_only):
 				if user_selection.upper() == 'S':
 					user_selection = -2
 					break
-					
-		else:
-			if int(user_selection) > 0 and int(user_selection) <= total:
-				break
 		
 		display_menu = False			# don't re-display menu - only show the prompt
 
@@ -286,21 +289,28 @@ def main(argv):
 				current_view = 'entries'
 	
 		if current_view == 'search':
-			search_text = input(' ' * 3 + 'enter search word: ')
-
-			clear_display()
-			print(' ' * 2 + script_details + '\n')
-
-			db_search = get_db_search(search_text)
-			selected_search_index = menu('Search results for \"' + search_text + '\"', db_search, db_col_name, 'B', False)
+			run_search = True
 			
-			# disable this when search works properly!
-			selected_search_index = 0
-
-			if selected_search_index == 0:
+			try:
+				search_text = input(' ' * 3 + 'enter search word: ')
+			except KeyboardInterrupt:
 				current_view = previous_view
-			else:
-				current_view = 'entries'
+				run_search = False
+
+			if run_search:
+				clear_display()
+				print(' ' * 2 + script_details + '\n')
+
+				db_search = get_db_search(search_text)
+				selected_search_index = menu('Search results for \"' + search_text + '\"', db_search, db_col_name, 'B', False)
+				
+				# disable this when search works properly!
+				selected_search_index = 0
+
+				if selected_search_index == 0:
+					current_view = previous_view
+				else:
+					current_view = 'entries'
 	
 		if current_view == 'entries':
 			clear_display()
