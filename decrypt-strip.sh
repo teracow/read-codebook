@@ -13,13 +13,13 @@
 Init()
 	{
 
-	script_file="decrypt-strip.sh"
-	script_name="${script_file%.*}"
+	local script_file="decrypt-strip.sh"
+	local script_name="${script_file%.*}"
 	script_details="${script_file} (2016-08-12)"
 
 	temp_path="/dev/shm/${script_name}"
-	encrypted_file="strip.db"
-	unencrypted_file="plaintext.db"
+	local encrypted_file="strip.db"
+	local unencrypted_file="plaintext.db"
 	decrypter="sqlcipher"
 	reader="read-codebook.py"
 	unencrypted_pathfile="${temp_path}/${unencrypted_file}"
@@ -81,18 +81,18 @@ fi
 mkdir -p "$temp_path"
 
 if [ "$?" -gt "0" ] ; then
-	echo "! Unable to create a temporary build directory! Exiting."
+	echo "! Unable to create a temporary directory! Exiting."
 	exit 1
 fi
 
 if [ -e "$unencrypted_pathfile" ] ; then
 	echo "! Plaintext database file already exists: [$unencrypted_pathfile]"
-	echo -n "? Delete this file first? "
+	echo -n "? Delete this file first? (y/n) "
 	read -n 1 result
 	echo
 
-	if [ "$result" == "y" ] || [ "$result" == "Y"  ] ; then
-		rm -F "$unencrypted_pathfile"
+	if [ "$result" == "y" ] || [ "$result" == "Y" ] ; then
+		rm -f "$unencrypted_pathfile"
 	else
 		exit 1
 	fi
@@ -124,13 +124,13 @@ if [ "$?" -eq "0" ] ; then
 	read -n 1 result
 	echo
 
-	if [ "$result" == "y" ] || [ "$result" == "Y"  ] ; then
+	if [ "$result" == "y" ] || [ "$result" == "Y" ] ; then
 		"$reader_pathfile" -i "$unencrypted_pathfile"
 		echo -n "? Delete file [$unencrypted_pathfile] ? (y/n) "
 		read -n 1 result
 		echo
 
-		if [ "$result" == "y" ] || [ "$result" == "Y"  ] ; then
+		if [ "$result" == "y" ] || [ "$result" == "Y" ] ; then
 			rm -f "$unencrypted_pathfile"
 		fi
 	fi
