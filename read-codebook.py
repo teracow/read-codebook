@@ -191,8 +191,8 @@ def get_db_search(text):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()    
-		# SELECT name, value FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE "%email%"
-		cur.execute('SELECT ' + db_col_name + ', ' + db_col_value + ' FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE value LIKE \"%' + text + '%\"')	
+		# SELECT * FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE "%email%"
+		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE value LIKE \"%' + text + '%\"')	
 
 	return cur.fetchall()
 
@@ -270,17 +270,18 @@ def main(argv):
 	
 	categories_table = get_db_table(db_name_categories)
 
+	previous_views_stack = []			# create stack
 	current_view = 'categories'
-	previous_view = current_view
-
+	
 	while True:
 		if current_view == 'categories':
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
 			selected_category_index = menu(db_name_categories, categories_table, db_col_name, 'S', False)
 
+			previous_views_stack.append(current_view)
+			
 			if selected_category_index == -2:
-				previous_view = current_view
 				current_view = 'search'
 			else:
 				category_row = categories_table[int(selected_category_index) - 1]
@@ -288,59 +289,59 @@ def main(argv):
 				entries_table = get_db_entries(db_name_entries, db_col_category_id, category_id)
 				current_view = 'entries'
 	
-		if current_view == 'search':
-			run_search = True
-			
-			try:
-				search_text = input(' ' * 3 + 'enter search word: ')
-			except KeyboardInterrupt:
-				current_view = previous_view
-				run_search = False
-
-			if run_search:
-				clear_display()
-				print(' ' * 2 + script_details + '\n')
-
-				db_search = get_db_search(search_text)
-				selected_search_index = menu('Search results for \"' + search_text + '\"', db_search, db_col_name, 'B', False)
-				
-				# disable this when search works properly!
-				selected_search_index = 0
-
-				if selected_search_index == 0:
-					current_view = previous_view
-				else:
-					current_view = 'entries'
-	
 		if current_view == 'entries':
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
 			selected_entry_index = menu(category_row[db_col_name], entries_table, db_col_name, 'SB', False)
 
 			if selected_entry_index == 0:
-				current_view = 'categories'
+				current_view = previous_views_stack.pop()
 			elif selected_entry_index == -2:
-				previous_view = current_view
+				previous_views_stack.append(current_view)
 				current_view = 'search'
 			else:
-				entry_row = entries_table[int(selected_entry_index) - 1]
-				selected_entry_id = entry_row[db_col_id]
-				selected_entry_name = entry_row[db_col_name]
-				fields_table = get_db_entry(selected_entry_id)
-				field_content = ''
-				header_line, footer_line = generate_lines_full_width_display(selected_entry_name)
-				
-				for field in fields_table:
-					if field[db_col_type_id]:
-						field_content += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
-					else:
-						# appears that notes don't have a field type ID
-						field_content = field[db_col_value]
-						break
-
+				previous_views_stack.append(current_view)
 				current_view = 'entry'
 					
+		if current_view == 'search':
+			try:
+				search_text = input(' ' * 3 + 'enter search word: ')
+				current_view = 'search results'
+			except KeyboardInterrupt:
+				current_view = previous_views_stack.pop()
+				
+		if current_view == 'search results':
+			clear_display()
+			print(' ' * 2 + script_details + '\n')
+
+			entries_table = get_db_search(search_text)
+			selected_entry_index = menu('Search results for \"' + search_text + '\"', entries_table, db_col_name, 'B', False)
+			
+			# disable this when search works properly!
+			#selected_entry_index = 0
+
+			if selected_entry_index == 0:
+				current_view = previous_views_stack.pop()
+			else:
+				previous_views_stack.append(current_view)
+				current_view = 'entry'
+
 		if current_view == 'entry':
+			entry_row = entries_table[int(selected_entry_index) - 1]
+			selected_entry_id = entry_row[db_col_id]
+			selected_entry_name = entry_row[db_col_name]
+			fields_table = get_db_entry(selected_entry_id)
+			field_content = ''
+			header_line, footer_line = generate_lines_full_width_display(selected_entry_name)
+			
+			for field in fields_table:
+				if field[db_col_type_id]:
+					field_content += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
+				else:
+					# appears that notes don't have a field type ID
+					field_content = field[db_col_value]
+					break
+			
 			clear_display()
 			print(' ' * 2 + script_details + '\n')
 			print(header_line)
@@ -360,7 +361,7 @@ def main(argv):
 					print()
 					prompt_only = True
 				elif user_selection == 0:
-					current_view = 'entries'
+					current_view = previous_views_stack.pop()
 					break
 
 if __name__ == '__main__':
