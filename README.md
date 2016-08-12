@@ -5,15 +5,17 @@ This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shel
 ---
 ###**Description:**
 
-1. The user supplies the path and filename to a SQLite database file created in **[Codebook](https://www.zetetic.net/codebook/)** (usually strip.db). 
+1. Ensure your SQLite database file created in **[Codebook](https://www.zetetic.net/codebook/)** (usually '**strip.db**') is available locally. 
 
-2. Enter the **Codebook** passphrase to decrypt this dB.
+2. run `./decrypt.sh -i strip.db`
 
-3. A decrypted (plaintext) database is then written to a new file located in /dev/shm.
+3. Enter the **Codebook** passphrase to decrypt.
 
-4. The user can then elect to open the included Python reader to examine the plaintext database contents. There is an option to write particular entries to text files in the working directory.
+3. A decrypted (plaintext) database is then written to '**/dev/shm/plaintext.db**'.
 
-5. They can then delete this plaintext database file.
+4. Then open this plaintext dB using the included Python reader to examine the contents. There is an option to write particular entries to text files in the working directory.
+
+5. When you're done, quit the reader and delete the plaintext database file.
 
 ---
 ###**Notes:**
@@ -27,11 +29,11 @@ At this time, I've decided not to use pysqlcipher to reduce the dependance on ot
 ---
 ###**Usage:**
 
-    $ ./decrypt-strip.sh --input-file [PATHFILE to strip.db]
+    $ ./decrypt-strip.sh -i [PATHFILE to strip.db]
 
 or, if the database file has already been decrypted:
 
-    $ ./read-codebook.py --input-file [PATHFILE to plaintext.db]
+    $ ./read-codebook.py -i [PATHFILE to plaintext.db]
 
 ---
 ###**Development Environment:**
