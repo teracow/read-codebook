@@ -49,3 +49,9 @@ or, if the database file has already been decrypted:
 
 
 Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email me](mailto:teracow@gmail.com)
+
+---
+###**Known Issues:**
+
+- (2016-08-12) - display output from search is unstructured. Working on it ...
+  

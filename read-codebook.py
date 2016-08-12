@@ -267,10 +267,11 @@ def main(argv):
 	
 		if current_view == 'search':
 			search_text = input(' ' * 3 + 'enter search word: ')
-			print()
+			clear_display()
+			print(' ' * 2 + script_details + '\n')
 
 			db_search = get_db_search(search_text)
-			selected_search = menu('Search results', db_search, db_col_value, 'B', False)
+			selected_search = menu('Search results for \"' + search_text + '\"', db_search, db_col_value, 'B', False)
 
 			if selected_search == 0:
 				current_view = previous_view
