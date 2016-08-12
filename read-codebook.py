@@ -40,9 +40,9 @@ colour_green_bright = '\033[1;32;40m'
 colour_red_bright = '\033[1;31;40m'
 colour_reset = '\033[0m'
 
-def menu(title, records, record_index, options, prompt_only):
-	total = len(records)
-	header_line, separator_line, footer_line, box_width = generate_lines_variable_width_display(title, records, record_index)
+def menu(title, table, column, options, prompt_only):
+	total = len(table)
+	header_line, separator_line, footer_line, box_width = generate_lines_variable_width_display(title, table, column)
 
 	if prompt_only:
 		display_menu = False
@@ -56,8 +56,8 @@ def menu(title, records, record_index, options, prompt_only):
 		if display_menu: 
 			print(header_line)
 
-			for index, record in enumerate(records):
-				print(generate_line_item_display(index + 1, record[record_index], box_width))
+			for index, record in enumerate(table):
+				print(generate_line_item_display(index + 1, record[column], box_width))
 
 		if total > 0:
 			if display_menu: print(separator_line)
@@ -188,8 +188,9 @@ def get_db_search(text):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()    
-		# SELECT name, value FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE '%email%';
+		# SELECT name, value FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE "%email%"
 		cur.execute('SELECT ' + db_col_name + ', ' + db_col_value + ' FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE value LIKE \"%' + text + '%\"')	
+
 	return cur.fetchall()
 
 def get_db_entry(id):
@@ -200,11 +201,13 @@ def get_db_entry(id):
 		cur = con.cursor()    
 		
 		# try joining fields to field types first. This will return none for notes as they don't have a field type set.
-		cur.execute('SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE ' + db_col_entry_id + ' = \"' + id + '\"')
+		# SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE entry_id = "328658"
+		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_types + ' ON ' + db_name_fields + '.' + db_col_type_id + ' = ' + db_name_types + '.' + db_col_id + ' WHERE ' + db_col_entry_id + ' = \"' + id + '\"')
 		result = cur.fetchall()
 						
 		if len(result) == 0:
 			# this may be a note, so try query again without join
+			# SELECT * FROM fields WHERE entry_id = "328456"
 			cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + id + '\"')
 			result = cur.fetchall()
 		
@@ -289,7 +292,10 @@ def main(argv):
 			print(' ' * 2 + script_details + '\n')
 
 			db_search = get_db_search(search_text)
-			selected_search_index = menu('Search results for \"' + search_text + '\"', db_search, db_col_value, 'B', False)
+			selected_search_index = menu('Search results for \"' + search_text + '\"', db_search, db_col_name, 'B', False)
+			
+			# disable this when search works properly!
+			selected_search_index = 0
 
 			if selected_search_index == 0:
 				current_view = previous_view
