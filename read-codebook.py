@@ -20,7 +20,8 @@ import sys
 import getopt
 import sqlite3 as lite
 
-script_details = 'read-codebook.py (2016-08-13)'
+script_file = 'read-codebook.py'
+script_details = script_file + ' (2016-08-13)'
 
 db_name_categories = 'categories'
 db_name_entries = 'entries'
@@ -48,26 +49,23 @@ def menu(title, table, column, options, prompt_only):
 							# This must be allowed for when adjusting this figure.
 
 	prebox_space = 1		# space before left border
+	display_menu = True
 	total = len(table)
-	header_line, separator_line, footer_line = generate_lines_variable_width_display(title, table, column)
-
-	if prompt_only:
-		display_menu = False
-	else:
-		display_menu = True
+	menu_header, menu_separator, menu_footer = generate_lines_variable_width_display(title, table, column)
+	display_menu != prompt_only
 
 	while True:
 		prompt_head = ''
 		prompt_tail = ''
 
 		if display_menu:
-			print(header_line)
+			print(menu_header)
 
 			for index, record in enumerate(table):
 				print(generate_line_item_display(index + 1, record[column]))
 
 		if total > 0:
-			if display_menu: print(separator_line)
+			if display_menu: print(menu_separator)
 
 			prompt_head += allowed_key('1') + ' to ' + allowed_key(str(total)) + ' or '
 
@@ -90,10 +88,10 @@ def menu(title, table, column, options, prompt_only):
 
 		if display_menu:
 			print(generate_line_item_display('Q', 'Quit'))
-			print(footer_line)
+			print(menu_footer)
 
 		try:
-			user_selection = input((' ' * prebox_space) + 'select (' + prompt_head + prompt_tail + '): ')
+			user_selection = input((' ' * prebox_space) + ' select (' + prompt_head + prompt_tail + '): ')
 			print()
 		except KeyboardInterrupt:
 			print('\n')
@@ -101,11 +99,9 @@ def menu(title, table, column, options, prompt_only):
 
 		# allowed keys based on 'options'
 		if user_selection.isdigit():
-			if int(user_selection) > 0 and int(user_selection) <= total:
-				break
+			if int(user_selection) > 0 and int(user_selection) <= total: break
 		else:
-			if user_selection.upper() == 'Q':
-				sys.exit()
+			if user_selection.upper() == 'Q': sys.exit()
 
 			if 'B' in options:
 				if user_selection.upper() == 'B':
@@ -122,7 +118,7 @@ def menu(title, table, column, options, prompt_only):
 					user_selection = -2
 					break
 
-		display_menu = False			# don't re-display menu - only show the prompt
+		display_menu = False			# don't re-display menu - only show prompt
 
 	return user_selection
 
@@ -160,31 +156,29 @@ def generate_lines_variable_width_display(title, records, record_index):
 	for index, record in enumerate(records):
 		item_width = calc_text_display_width(index, record[record_index])
 
-		if (item_width + row_min_length) > box_width:
-			box_width = item_width + row_min_length
+		if (item_width + row_min_length) > box_width: box_width = item_width + row_min_length
 
-	if title_min_length > box_width:
-		box_width = title_min_length
+	if title_min_length > box_width: box_width = title_min_length
 
 	if title:
-		header_line = (' ' * prebox_space) + '┌' + ('─' * title_left_border) + '┤' + (' ' * title_space) + bold_title(title) + (' ' * title_space) + '├' + '─' * (box_width - title_min_length) + '┐'
-		separator_line = (' ' * prebox_space) + '├' + ('─' * (box_width - 2)) + '┤'
-		footer_line = (' ' * prebox_space) + '└' + ('─' * (box_width - 2)) + '┘'
+		menu_header = (' ' * prebox_space) + '┌' + ('─' * title_left_border) + '┤' + (' ' * title_space) + bold_title(title) + (' ' * title_space) + '├' + '─' * (box_width - title_min_length) + '┐'
+		menu_separator = (' ' * prebox_space) + '├' + ('─' * (box_width - 2)) + '┤'
+		menu_footer = (' ' * prebox_space) + '└' + ('─' * (box_width - 2)) + '┘'
 	else:
-		header_line = (' ' * prebox_space) + '┌' + ('─' * (box_width - 2)) + '┐'
-		separator_line = ''
-		footer_line = (' ' * prebox_space) + '└' + ('─' * (box_width - 2)) + '┘'
+		menu_header = (' ' * prebox_space) + '┌' + ('─' * (box_width - 2)) + '┐'
+		menu_separator = ''
+		menu_footer = (' ' * prebox_space) + '└' + ('─' * (box_width - 2)) + '┘'
 
-	return header_line, separator_line, footer_line
+	return menu_header, menu_separator, menu_footer
 
 def generate_lines_full_width_display(title):
 	rows_str, columns_str = os.popen('stty size', 'r').read().split()
 	columns = int(columns_str)
 
-	header_line = '═' * 8 + '╣ ' + bold_title(title) + ' ╠' + '═' * (columns - 8 - 4 - len(title))
-	footer_line = '═' * columns
+	header = '═' * 8 + '╣ ' + bold_title(title) + ' ╠' + '═' * (columns - 8 - 4 - len(title))
+	footer = '═' * columns
 
-	return header_line, footer_line
+	return header, footer
 
 def write_entry_to_file(filename, content):
 	output_pathfile = filename.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
@@ -202,6 +196,7 @@ def write_entry_to_file(filename, content):
 
 def clear_display():
 	print('\033c')
+	print(' ' * 2 + script_details + '\n')
 
 	return
 
@@ -212,7 +207,7 @@ def get_db_search(text):
 		con.row_factory = lite.Row
 		cur = con.cursor()
 		# SELECT * FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE "%email%"
-		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE value LIKE \"%' + text + '%\"')
+		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE ' + db_col_value + ' LIKE \"%' + text + '%\"')
 
 	return cur.fetchall()
 
@@ -255,37 +250,48 @@ def get_db_categories():
 
 	return cur.fetchall()
 
-def main(argv):
-	global types_table, database_pathfile
-	help_message = './read-codebook.py -i <inputfile>'
+def db_exists():
+	if os.path.exists(database_pathfile):
+		return True
+	else:
+		print('\n! File not found! [{}]'.format(database_pathfile))
+		return False
+
+def check_opts(argv):
+	global database_pathfile
+
 	database_pathfile = ''
+	help_message = '\nUsage: ./' + script_file + ' -i [inputfile]'
 
 	try:
 		opts, args = getopt.getopt(argv,'hvi:',['help','version','input-file='])
 	except getopt.GetoptError:
 		print(help_message)
-		sys.exit(2)
+		return 2
 
 	for opt, arg in opts:
 		if opt in ('-h', '--help'):
 			print(help_message)
-			sys.exit()
+			return 1
 		elif opt in ('-v', '--version'):
-			print(script_details)
-			sys.exit()
+			return 1
 		elif opt in ('-i', '--input-file'):
 			database_pathfile = arg
 
 	if not database_pathfile:
 		print(help_message)
-		sys.exit(1)
+		return 2
 
+	if not db_exists(): return 3
+
+	return 0
+
+def main(argv):
 	print(script_details)
-	print()
 
-	if not os.path.exists(database_pathfile):
-		print('! File not found! [{}]'.format(database_pathfile))
-		sys.exit(1)
+	result = check_opts(argv)
+
+	if result > 0: return result
 
 	all_categories = get_db_categories()
 	previous_views_stack = []
@@ -294,9 +300,7 @@ def main(argv):
 	while True:
 		if current_view == 'categories':
 			clear_display()
-			print(' ' * 2 + script_details + '\n')
 			category_index = menu(db_name_categories, all_categories, db_col_name, 'S', False)
-
 			previous_views_stack.append(current_view)
 
 			if category_index == -2:
@@ -308,7 +312,6 @@ def main(argv):
 
 		if current_view == 'entries':
 			clear_display()
-			print(' ' * 2 + script_details + '\n')
 			entry_index = menu(category_row[db_col_name], category_entries, db_col_name, 'SB', False)
 
 			if entry_index == 0:
@@ -332,7 +335,6 @@ def main(argv):
 
 		if current_view == 'search results':
 			clear_display()
-			print(' ' * 2 + script_details + '\n')
 			entry_index = menu('Search results for \"' + search_text + '\"', search_entries, db_col_name, 'B', False)
 
 			if entry_index == 0:
@@ -346,22 +348,21 @@ def main(argv):
 		if current_view == 'fields':
 			entry_name = entry_row[db_col_name]
 			entry_fields = get_db_fields_from_entry(entry_id)
-			field_content = ''
-			header_line, footer_line = generate_lines_full_width_display(entry_name)
+			content_text = ''
+			content_header, content_footer = generate_lines_full_width_display(entry_name)
 
 			for field in entry_fields:
 				if field[db_col_type_id]:
-					field_content += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
+					content_text += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
 				else:
 					# appears that notes don't have a field type ID
-					field_content = field[db_col_value]
+					content_text = field[db_col_value]
 					break
 
 			clear_display()
-			print(' ' * 2 + script_details + '\n')
-			print(header_line)
-			print(field_content)
-			print(footer_line)
+			print(content_header)
+			print(content_text)
+			print(content_footer)
 			print()
 
 			prompt_only = False
@@ -370,7 +371,7 @@ def main(argv):
 				user_selection = menu('', '', '', 'WB', prompt_only)
 
 				if user_selection == -1:
-					write_entry_to_file(entry_name, field_content)
+					write_entry_to_file(entry_name, content_text)
 					print()
 					prompt_only = True
 				elif user_selection == 0:
@@ -378,4 +379,5 @@ def main(argv):
 					break
 
 if __name__ == '__main__':
-	main(sys.argv[1:])
+	result = main(sys.argv[1:])
+	exit(result)
