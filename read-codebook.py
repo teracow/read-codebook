@@ -129,11 +129,11 @@ def bold_title(text):
 	
 def calc_text_display_width(index, text):
 	
-	return len('(' + str(index) + ') ' + text + ' ')
+	return len('(' + str(index) + ') ' + text)
 
 def generate_line_item_display(index, text, box_width):
 
-	return ' │ ({}) {} │'.format(allowed_key(str(index)), text + ' ' * (box_width - calc_text_display_width(index, text)))
+	return ' │ ({}) {} │'.format(allowed_key(str(index)), text + ' ' * (box_width - calc_text_display_width(index, text) + 1))
 	
 def generate_lines_variable_width_display(title, records, record_index):
 	box_width = 32			# set a minimum size
@@ -146,17 +146,17 @@ def generate_lines_variable_width_display(title, records, record_index):
 		if item_width > box_width:
 			box_width = item_width
 	
-	if (len(title) + 7) > box_width:
-		box_width = len(title) + 7
+	if (len(title) + 5) > box_width:
+		box_width = len(title) + 5
 	
 	if title:
-		header_line = ' ┌' + '─' * 4 + '┤ ' + bold_title(title) + ' ├' + '─' * (box_width - 4 - 4 - len(title) + index_space) + '┐'
-		separator_line = ' ├' + '─' * ((box_width) + index_space) + '┤'
-		footer_line = ' └' + '─' * ((box_width) + index_space) + '┘'
+		header_line = ' ┌' + '─' * 4 + '┤ ' + bold_title(title) + ' ├' + '─' * (box_width - 4 - 2 - len(title) + index_space) + '┐'
+		separator_line = ' ├' + '─' * ((box_width) + index_space + 2) + '┤'
+		footer_line = ' └' + '─' * ((box_width) + index_space + 2) + '┘'
 	else:
-		header_line = ' ┌' + '─' * ((box_width) + index_space) + '┐'
+		header_line = ' ┌' + '─' * ((box_width) + index_space + 2) + '┐'
 		separator_line = ''
-		footer_line = ' └' + '─' * ((box_width) + index_space) + '┘'
+		footer_line = ' └' + '─' * ((box_width) + index_space + 2) + '┘'
 						
 	return header_line, separator_line, footer_line, box_width
 
