@@ -21,7 +21,7 @@ import getopt
 import sqlite3 as lite
 
 script_file = 'read-codebook.py'
-script_details = script_file + ' (2016-08-13)'
+script_details = script_file + ' (2016-08-14)'
 
 db_name_categories = 'categories'
 db_name_entries = 'entries'
@@ -294,58 +294,58 @@ def main(argv):
 	if result > 0: return result
 
 	all_categories = get_db_categories()
-	previous_views_stack = []
-	current_view = 'categories'
+	menu_stack = []
+	current_menu = 'categories'
 
 	while True:
-		if current_view == 'categories':
+		if current_menu == 'categories':
 			clear_display()
 			category_index = menu(db_name_categories, all_categories, db_col_name, 'S', False)
-			previous_views_stack.append(current_view)
+			menu_stack.append(current_menu)
 
 			if category_index == -2:
-				current_view = 'search'
+				current_menu = 'search'
 			else:
 				category_row = all_categories[int(category_index) - 1]
 				category_entries = get_db_entries_from_category(category_row[db_col_id])
-				current_view = 'entries'
+				current_menu = 'entries'
 
-		if current_view == 'entries':
+		if current_menu == 'entries':
 			clear_display()
 			entry_index = menu(category_row[db_col_name], category_entries, db_col_name, 'SB', False)
 
 			if entry_index == 0:
-				current_view = previous_views_stack.pop()
+				current_menu = menu_stack.pop()
 			elif entry_index == -2:
-				previous_views_stack.append(current_view)
-				current_view = 'search'
+				menu_stack.append(current_menu)
+				current_menu = 'search'
 			else:
 				entry_row = category_entries[int(entry_index) - 1]
 				entry_id = entry_row[db_col_id]
-				previous_views_stack.append(current_view)
-				current_view = 'fields'
+				menu_stack.append(current_menu)
+				current_menu = 'fields'
 
-		if current_view == 'search':
+		if current_menu == 'search':
 			try:
 				search_text = input(' ' * 3 + 'enter search text: ')
 				search_entries = get_db_search(search_text)
-				current_view = 'search results'
+				current_menu = 'search results'
 			except KeyboardInterrupt:
-				current_view = previous_views_stack.pop()
+				current_menu = menu_stack.pop()
 
-		if current_view == 'search results':
+		if current_menu == 'search results':
 			clear_display()
 			entry_index = menu('Search results for \"' + search_text + '\"', search_entries, db_col_name, 'B', False)
 
 			if entry_index == 0:
-				current_view = previous_views_stack.pop()
+				current_menu = menu_stack.pop()
 			else:
 				entry_row = search_entries[int(entry_index) - 1]
 				entry_id = entry_row[db_col_entry_id]
-				previous_views_stack.append(current_view)
-				current_view = 'fields'
+				menu_stack.append(current_menu)
+				current_menu = 'fields'
 
-		if current_view == 'fields':
+		if current_menu == 'fields':
 			entry_name = entry_row[db_col_name]
 			entry_fields = get_db_fields_from_entry(entry_id)
 			content_text = ''
@@ -376,7 +376,7 @@ def main(argv):
 					print()
 					prompt_only = True
 				elif user_selection == 0:
-					current_view = previous_views_stack.pop()
+					current_menu = menu_stack.pop()
 					break
 
 if __name__ == '__main__':
