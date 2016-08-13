@@ -34,6 +34,7 @@ db_col_entry_id = 'entry_id'
 db_col_type_id = 'type_id'
 db_col_name = 'name'
 db_col_value = 'value'
+db_col_favorite = 'is_favorite'
 
 colour_white_bright = '\033[1;37;40m'
 colour_yellow_bright = '\033[1;33;40m'
@@ -79,6 +80,11 @@ def menu(title, table, column, options, prompt_only):
 
 			prompt_tail += allowed_key('W') + ' or '
 
+		if 'F' in options:
+			if display_menu: print(generate_line_item_display('F', 'Show Favorites'))
+
+			prompt_tail += allowed_key('F') + ' or '
+
 		if 'B' in options:
 			if display_menu: print(generate_line_item_display('B', 'Back'))
 
@@ -106,6 +112,11 @@ def menu(title, table, column, options, prompt_only):
 			if 'B' in options:
 				if user_selection.upper() == 'B':
 					user_selection = 0
+					break
+
+			if 'F' in options:
+				if user_selection.upper() == 'F':
+					user_selection = -3
 					break
 
 			if 'W' in options:
@@ -199,6 +210,17 @@ def clear_display():
 	print(' ' * 2 + script_details + '\n')
 
 	return
+
+def get_db_favorites():
+	con = lite.connect(database_pathfile)
+
+	with con:
+		con.row_factory = lite.Row
+		cur = con.cursor()
+		# SELECT * FROM entries WHERE is_favorite = "1"
+		cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_favorite + ' = \"1\"')
+
+	return cur.fetchall()
 
 def get_db_search(text):
 	con = lite.connect(database_pathfile)
@@ -300,11 +322,14 @@ def main(argv):
 	while True:
 		if current_menu == 'categories':
 			clear_display()
-			category_index = menu(db_name_categories, all_categories, db_col_name, 'S', False)
+			category_index = menu(db_name_categories, all_categories, db_col_name, 'SF', False)
 			menu_stack.append(current_menu)
 
 			if category_index == -2:
 				current_menu = 'search'
+			elif category_index == -3:
+				favorites_entries = get_db_favorites()
+				current_menu = 'favorites'
 			else:
 				category_row = all_categories[int(category_index) - 1]
 				category_entries = get_db_entries_from_category(category_row[db_col_id])
@@ -342,6 +367,18 @@ def main(argv):
 			else:
 				entry_row = search_entries[int(entry_index) - 1]
 				entry_id = entry_row[db_col_entry_id]
+				menu_stack.append(current_menu)
+				current_menu = 'fields'
+
+		if current_menu == 'favorites':
+			clear_display()
+			favorite_index = menu('Favorites', favorites_entries, db_col_name, 'B', False)
+
+			if favorite_index == 0:
+				current_menu = menu_stack.pop()
+			else:
+				entry_row = favorites_entries[int(favorite_index) - 1]
+				entry_id = entry_row[db_col_id]
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
 
