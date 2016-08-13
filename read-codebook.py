@@ -44,11 +44,11 @@ colour_reset = '\033[0m'
 def menu(title, table, column, options, prompt_only):
 	global box_width, prebox_space
 	
-	box_width = 30			# Set a minimum menu box size - this is the overall width including box chars.
-							# Note! menu option messages such as 'Write to text file' are not length tested!
-							# This must be allowed for when adjusting this figure.
+	box_width = 30		# Set a minimum menu box size - this is the overall width including box chars.
+						# Note! menu option messages such as 'Write to text file' are not length tested!
+						# This must be allowed for when adjusting this figure.
 
-	prebox_space = 1		# space before left border
+	prebox_space = 1	# space before left border
 	display_menu = True
 	total = len(table)
 	menu_header, menu_separator, menu_footer = generate_lines_variable_width_display(title, table, column)
@@ -353,7 +353,8 @@ def main(argv):
 
 			for field in entry_fields:
 				if field[db_col_type_id]:
-					content_text += "{}:\n\t{}\n".format(field[db_col_name], field[db_col_value])
+					if content_text: content_text += '\n'
+					content_text += "{}:\n\t{}".format(field[db_col_name], field[db_col_value])
 				else:
 					# appears that notes don't have a field type ID
 					content_text = field[db_col_value]
