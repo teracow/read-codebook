@@ -57,14 +57,16 @@ script_details = '{} ({})'.format(colour_light_fg + colour_bold + script_file + 
 colours_write_ok = colour_green_fg + colour_bold
 colours_write_fail = colour_red_fg + colour_bold
 
+prebox_space = 1		# space before left border
+
 def draw_menu(title, table, column, options, prompt_only):
-	global box_width, prebox_space
+	global box_width
 
-	box_width = 31		# Set a minimum menu box size - this is the overall width including box chars.
-						# Note! menu option messages such as 'Write to text file' are not length tested!
-						# This must be allowed for when adjusting this figure.
+	box_width = len(script_file) + len(script_date) + 5
+	# Set a minimum menu box size - this is the overall width including box chars.
+	# Note! menu option messages such as 'Write to text file' are not length tested!
+	# This must be allowed for when adjusting this figure.
 
-	prebox_space = 1	# space before left border
 	display_menu = True
 	total = len(table)
 	header, separator, footer = generate_menu_lines(title, table, column)
@@ -220,7 +222,7 @@ def write_entry_to_file(entry_name, entry_fields):
 
 def clear_display():
 	print('\033c')
-	print(' ' * 2 + script_details + '\n')
+	print((' ' * prebox_space) + ' ' + script_details + '\n')
 
 	return
 
@@ -401,7 +403,7 @@ def main(argv):
 
 		if current_menu == 'search':
 			try:
-				search_text = input(' ' * 3 + 'enter search text: ')
+				search_text = input((' ' * prebox_space) + ' enter text to search for: ')
 				current_menu = 'search results'
 			except KeyboardInterrupt:
 				current_menu = menu_stack.pop()
