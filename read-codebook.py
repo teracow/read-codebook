@@ -214,7 +214,7 @@ def get_db_search(text):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute('SELECT * FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE \"%' + text + '%\"')
+		cur.execute('SELECT * FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE ?', ('%' + text + '%',))
 
 	return cur.fetchall()
 
@@ -226,11 +226,11 @@ def get_db_fields_from_entry(entry_id):
 		cur = con.cursor()
 
 		# try joining fields to field types first. This will return none for notes as they don't have a field type set.
-		cur.execute('SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE entry_id = \"' + entry_id + '\"')
+		cur.execute('SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE entry_id = ?', (entry_id,))
 		result = cur.fetchall()
 
 		if len(result) == 0:		# this may be a note, so try query again without join
-			cur.execute('SELECT * FROM fields WHERE entry_id = \"' + entry_id + '\"')
+			cur.execute('SELECT * FROM fields WHERE entry_id = ?', (entry_id,))
 			result = cur.fetchall()
 
 	return result
@@ -241,7 +241,7 @@ def get_db_entries_from_category(category_id):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute('SELECT * FROM entries WHERE category_id = \"' + category_id + '\" ORDER BY name')
+		cur.execute('SELECT * FROM entries WHERE category_id = ? ORDER BY name', (category_id,))
 
 	return cur.fetchall()
 
