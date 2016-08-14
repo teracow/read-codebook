@@ -23,19 +23,6 @@ import sqlite3 as lite
 script_file = 'read-codebook.py'
 script_details = script_file + ' (2016-08-14)'
 
-db_name_categories = 'categories'
-db_name_entries = 'entries'
-db_name_fields = 'fields'
-db_name_types = 'types'						# field data types - password, email, number, etc ...
-
-db_col_id = 'id'
-db_col_category_id = 'category_id'
-db_col_entry_id = 'entry_id'
-db_col_type_id = 'type_id'
-db_col_name = 'name'
-db_col_value = 'value'
-db_col_favorite = 'is_favorite'
-
 colour_white_bright = '\033[1;37;40m'
 colour_yellow_bright = '\033[1;33;40m'
 colour_green_bright = '\033[1;32;40m'
@@ -45,7 +32,7 @@ colour_reset = '\033[0m'
 def menu(title, table, column, options, prompt_only):
 	global box_width, prebox_space
 	
-	box_width = 30		# Set a minimum menu box size - this is the overall width including box chars.
+	box_width = 31		# Set a minimum menu box size - this is the overall width including box chars.
 						# Note! menu option messages such as 'Write to text file' are not length tested!
 						# This must be allowed for when adjusting this figure.
 
@@ -217,9 +204,8 @@ def get_db_favorites():
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		# SELECT * FROM entries WHERE is_favorite = "1"
-		cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_favorite + ' = \"1\"')
-
+		cur.execute('SELECT * FROM entries WHERE is_favorite = \"1\"')
+	
 	return cur.fetchall()
 
 def get_db_search(text):
@@ -228,8 +214,7 @@ def get_db_search(text):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		# SELECT * FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE "%email%"
-		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_entries + ' ON ' + db_name_fields + '.' + db_col_entry_id + ' = ' + db_name_entries + '.' + db_col_id + ' WHERE ' + db_col_value + ' LIKE \"%' + text + '%\"')
+		cur.execute('SELECT * FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE \"%' + text + '%\"')
 
 	return cur.fetchall()
 
@@ -241,13 +226,11 @@ def get_db_fields_from_entry(entry_id):
 		cur = con.cursor()
 
 		# try joining fields to field types first. This will return none for notes as they don't have a field type set.
-		# SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE entry.id = "328658"
-		cur.execute('SELECT * FROM ' + db_name_fields + ' JOIN ' + db_name_types + ' ON ' + db_name_fields + '.' + db_col_type_id + ' = ' + db_name_types + '.' + db_col_id + ' WHERE ' + db_col_entry_id + ' = \"' + entry_id + '\"')
+		cur.execute('SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE entry_id = \"' + entry_id + '\"')
 		result = cur.fetchall()
 
 		if len(result) == 0:		# this may be a note, so try query again without join
-			# SELECT * FROM fields WHERE entry_id = "328456"
-			cur.execute('SELECT * FROM ' + db_name_fields + ' WHERE ' + db_col_entry_id + ' = \"' + entry_id + '\"')
+			cur.execute('SELECT * FROM fields WHERE entry_id = \"' + entry_id + '\"')
 			result = cur.fetchall()
 
 	return result
@@ -258,7 +241,7 @@ def get_db_entries_from_category(category_id):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute('SELECT * FROM ' + db_name_entries + ' WHERE ' + db_col_category_id + ' = \"' + category_id + '\"' + ' ORDER BY ' + db_col_name)
+		cur.execute('SELECT * FROM entries WHERE category_id = \"' + category_id + '\" ORDER BY name')
 
 	return cur.fetchall()
 
@@ -268,7 +251,7 @@ def get_db_categories():
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute('SELECT ' + db_col_id + ', ' + db_col_name + ' FROM ' + db_name_categories + ' ORDER BY ' + db_col_name)
+		cur.execute('SELECT id, name FROM categories ORDER BY name')
 
 	return cur.fetchall()
 
@@ -322,7 +305,7 @@ def main(argv):
 	while True:
 		if current_menu == 'categories':
 			clear_display()
-			category_index = menu(db_name_categories, all_categories, db_col_name, 'SF', False)
+			category_index = menu('categories', all_categories, 'name', 'SF', False)
 			menu_stack.append(current_menu)
 
 			if category_index == -2:
@@ -332,12 +315,12 @@ def main(argv):
 				current_menu = 'favorites'
 			else:
 				category_row = all_categories[int(category_index) - 1]
-				category_entries = get_db_entries_from_category(category_row[db_col_id])
+				category_entries = get_db_entries_from_category(category_row['id'])
 				current_menu = 'entries'
 
 		if current_menu == 'entries':
 			clear_display()
-			entry_index = menu(category_row[db_col_name], category_entries, db_col_name, 'SB', False)
+			entry_index = menu(category_row['name'], category_entries, 'name', 'SB', False)
 
 			if entry_index == 0:
 				current_menu = menu_stack.pop()
@@ -346,7 +329,7 @@ def main(argv):
 				current_menu = 'search'
 			else:
 				entry_row = category_entries[int(entry_index) - 1]
-				entry_id = entry_row[db_col_id]
+				entry_id = entry_row['id']
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
 
@@ -360,41 +343,41 @@ def main(argv):
 
 		if current_menu == 'search results':
 			clear_display()
-			entry_index = menu('Search results for \"' + search_text + '\"', search_entries, db_col_name, 'B', False)
+			entry_index = menu('Search results for \"' + search_text + '\"', search_entries, 'name', 'B', False)
 
 			if entry_index == 0:
 				current_menu = menu_stack.pop()
 			else:
 				entry_row = search_entries[int(entry_index) - 1]
-				entry_id = entry_row[db_col_entry_id]
+				entry_id = entry_row['entry_id']
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
 
 		if current_menu == 'favorites':
 			clear_display()
-			favorite_index = menu('Favorites', favorites_entries, db_col_name, 'B', False)
+			favorite_index = menu('Favorites', favorites_entries, 'name', 'B', False)
 
 			if favorite_index == 0:
 				current_menu = menu_stack.pop()
 			else:
 				entry_row = favorites_entries[int(favorite_index) - 1]
-				entry_id = entry_row[db_col_id]
+				entry_id = entry_row['id']
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
 
 		if current_menu == 'fields':
-			entry_name = entry_row[db_col_name]
+			entry_name = entry_row['name']
 			entry_fields = get_db_fields_from_entry(entry_id)
 			content_text = ''
 			content_header, content_footer = generate_lines_full_width_display(entry_name)
 
 			for field in entry_fields:
-				if field[db_col_type_id]:
+				if field['type_id']:
 					if content_text: content_text += '\n'
-					content_text += "{}:\n\t{}".format(field[db_col_name], field[db_col_value])
+					content_text += "{}:\n\t{}".format(field['name'], field['value'])
 				else:
 					# appears that notes don't have a field type ID
-					content_text = field[db_col_value]
+					content_text = field['value']
 					break
 
 			clear_display()
