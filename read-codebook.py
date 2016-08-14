@@ -311,14 +311,13 @@ def main(argv):
 			if category_index == -2:
 				current_menu = 'search'
 			elif category_index == -3:
-				favorites_entries = get_db_favorites()
 				current_menu = 'favorites'
 			else:
-				category_row = all_categories[int(category_index) - 1]
-				category_entries = get_db_entries_from_category(category_row['id'])
 				current_menu = 'entries'
 
 		if current_menu == 'entries':
+			category_row = all_categories[int(category_index) - 1]
+			category_entries = get_db_entries_from_category(category_row['id'])
 			clear_display()
 			entry_index = menu(category_row['name'], category_entries, 'name', 'SB', False)
 
@@ -336,12 +335,12 @@ def main(argv):
 		if current_menu == 'search':
 			try:
 				search_text = input(' ' * 3 + 'enter search text: ')
-				search_entries = get_db_search(search_text)
 				current_menu = 'search results'
 			except KeyboardInterrupt:
 				current_menu = menu_stack.pop()
 
 		if current_menu == 'search results':
+			search_entries = get_db_search(search_text)
 			clear_display()
 			entry_index = menu('Search results for \"' + search_text + '\"', search_entries, 'name', 'B', False)
 
@@ -354,6 +353,7 @@ def main(argv):
 				current_menu = 'fields'
 
 		if current_menu == 'favorites':
+			favorites_entries = get_db_favorites()
 			clear_display()
 			favorite_index = menu('Favorites', favorites_entries, 'name', 'B', False)
 
