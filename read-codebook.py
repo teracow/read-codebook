@@ -23,15 +23,30 @@ import sqlite3 as lite
 script_file = 'read-codebook.py'
 script_details = script_file + ' (2016-08-14)'
 
-colour_white_bright = '\033[1;37;40m'
-colour_yellow_bright = '\033[1;33;40m'
+colour_white_fg = '\033[97m'
+colour_light_fg = '\033[38;5;250m'
+colour_yellow_fg = '\033[33;40m'
 colour_green_bright = '\033[1;32;40m'
 colour_red_bright = '\033[1;31;40m'
 colour_reset = '\033[0m'
 
-def menu(title, table, column, options, prompt_only):
+colour_grey_fg = '\033[38;5;246m'
+colour_orange_fg = '\033[38;5;214m'
+colour_dark_grey_bg = '\033[48;5;234m'
+colour_bright = '\033[1m'
+
+colours_menu_box = colour_light_fg + colour_dark_grey_bg
+colours_menu_title = colour_orange_fg + colour_bright + colour_dark_grey_bg
+
+colours_single_entry_title = colour_white_fg + colour_bright + colour_dark_grey_bg
+colours_single_entry_header = colour_grey_fg + colour_dark_grey_bg
+colours_single_entry_name = colour_light_fg + colour_dark_grey_bg
+colours_single_entry_value = colour_orange_fg + colour_dark_grey_bg
+colours_single_entry_footer = colour_grey_fg + colour_dark_grey_bg
+
+def draw_menu(title, table, column, options, prompt_only):
 	global box_width, prebox_space
-	
+
 	box_width = 31		# Set a minimum menu box size - this is the overall width including box chars.
 						# Note! menu option messages such as 'Write to text file' are not length tested!
 						# This must be allowed for when adjusting this figure.
@@ -39,7 +54,9 @@ def menu(title, table, column, options, prompt_only):
 	prebox_space = 1	# space before left border
 	display_menu = True
 	total = len(table)
-	menu_header, menu_separator, menu_footer = generate_lines_variable_width_display(title, table, column)
+	prompt_template = (' ' * prebox_space) + ' select ({}): '
+
+	menu_header, menu_separator, menu_footer = generate_menu_lines(title, table, column, options, prompt_template)
 	display_menu != prompt_only
 
 	while True:
@@ -50,41 +67,41 @@ def menu(title, table, column, options, prompt_only):
 			print(menu_header)
 
 			for index, record in enumerate(table):
-				print(generate_line_item_display(index + 1, record[column]))
+				print(generate_menu_line_item(index + 1, record[column]))
 
 		if total > 0:
 			if display_menu: print(menu_separator)
 
-			prompt_head += allowed_key('1') + ' to ' + allowed_key(str(total)) + ' or '
+			prompt_head += allowed_item_key('1') + ' to ' + allowed_item_key(str(total)) + ' or '
 
 		if 'S' in options:
-			if display_menu: print(generate_line_item_display('S', 'Search'))
+			if display_menu: print(generate_menu_line_option('S', 'Search'))
 
-			prompt_tail += allowed_key('S') + ' or '
+			prompt_tail += allowed_option_key('S') + ' or '
 
 		if 'W' in options:
-			if display_menu: print(generate_line_item_display('W', 'Write to text file'))
+			if display_menu: print(generate_menu_line_option('W', 'Write to text file'))
 
-			prompt_tail += allowed_key('W') + ' or '
+			prompt_tail += allowed_option_key('W') + ' or '
 
 		if 'F' in options:
-			if display_menu: print(generate_line_item_display('F', 'Favorites'))
+			if display_menu: print(generate_menu_line_option('F', 'Favorites'))
 
-			prompt_tail += allowed_key('F') + ' or '
+			prompt_tail += allowed_option_key('F') + ' or '
 
 		if 'B' in options:
-			if display_menu: print(generate_line_item_display('B', 'Back'))
+			if display_menu: print(generate_menu_line_option('B', 'Back'))
 
-			prompt_tail += allowed_key('B') + ' or '
+			prompt_tail += allowed_option_key('B') + ' or '
 
-		prompt_tail += allowed_key('Q')
+		prompt_tail += allowed_option_key('Q')
 
 		if display_menu:
-			print(generate_line_item_display('Q', 'Quit'))
+			print(generate_menu_line_option('Q', 'Quit'))
 			print(menu_footer)
 
 		try:
-			user_selection = input((' ' * prebox_space) + ' select (' + prompt_head + prompt_tail + '): ')
+			user_selection = input(prompt_template.format(prompt_head + prompt_tail))
 			print()
 		except KeyboardInterrupt:
 			print('\n')
@@ -120,26 +137,31 @@ def menu(title, table, column, options, prompt_only):
 
 	return user_selection
 
-def allowed_key(text):
+def allowed_item_key(text):
 
-	return colour_yellow_bright + text + colour_reset
+	return colour_orange_fg + colour_bright + colour_dark_grey_bg + text + colour_reset
 
-def bold_title(text):
+def allowed_option_key(text):
 
-	return colour_white_bright + text + colour_reset
+	return colour_yellow_fg + colour_bright + colour_dark_grey_bg + text + colour_reset
 
-def calc_text_display_width(index, text):
+def calc_line_item_width(index, text):
 
 	return len(str(index) + text)
 
-def generate_line_item_display(index, text):
+def generate_menu_line_item(index, text):
 
-	return (' ' * prebox_space) + '│' + (' ' * row_index_space) + '(' + allowed_key(str(index)) + ')' + (' ' * row_item_space) + text + (' ' * (box_width - calc_text_display_width(index, text) - row_min_length)) + (' ' * row_trailing_space) + '│'
+	return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_item_key(str(index)) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + text + (' ' * (box_width - calc_line_item_width(index, text) - row_min_length)) + (' ' * row_trailing_space) + '│' + colour_reset
 
-def generate_lines_variable_width_display(title, records, record_index):
+def generate_menu_line_option(char, text):
+
+	return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_option_key(char) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + text + (' ' * (box_width - calc_line_item_width(char, text) - row_min_length)) + (' ' * row_trailing_space) + '│' + colour_reset
+
+def generate_menu_lines(title, records, record_index, options, prompt_template):
 	global box_width, prebox_space, row_index_space, row_item_space, row_trailing_space, row_min_length
 
-	row_index_space = 1		# space between the left border and the index parentheses - only used to calculate box width
+	index = 0
+	row_index_space = 1		# space between the left border and the index parentheses
 	row_item_space = 1		# space between index parentheses and the displayed item
 	row_trailing_space = 1	# space between item and right border
 	row_min_length = row_index_space + 2 + row_item_space + row_trailing_space + 2		# 2 x parentheses and 2 x box chars
@@ -152,39 +174,52 @@ def generate_lines_variable_width_display(title, records, record_index):
 
 	# find longest display item so box width can be recalculated
 	for index, record in enumerate(records):
-		item_width = calc_text_display_width(index, record[record_index])
-
+		item_width = calc_line_item_width(index, record[record_index])
 		if (item_width + row_min_length) > box_width: box_width = item_width + row_min_length
 
+	prompt_length = (len(options) + 1) * 5							# each option char also has 4 other chars i.e. ' or S' = 5 chars
+	prompt_length += len(prompt_template) - 2	 					# subtract placeholder chars {}
+	if index > 0: prompt_length += len('1 to ' + str(index + 1))	# add length of index chars from '1 to n'
+	prompt_length += 3							 					# number of chars to allow for user input
+	prompt_length -= prebox_space
+
 	if title_min_length > box_width: box_width = title_min_length
+	if prompt_length > box_width: box_width = prompt_length
 
 	if title:
-		menu_header = (' ' * prebox_space) + '┌' + ('─' * title_left_border) + '┤' + (' ' * title_space) + bold_title(title) + (' ' * title_space) + '├' + '─' * (box_width - title_min_length) + '┐'
-		menu_separator = (' ' * prebox_space) + '├' + ('─' * (box_width - 2)) + '┤'
-		menu_footer = (' ' * prebox_space) + '└' + ('─' * (box_width - 2)) + '┘'
+		menu_header = (' ' * prebox_space) + colours_menu_box + '┌' + ('─' * title_left_border) + '┤' + (' ' * title_space) + colours_menu_title + title + colour_reset + colours_menu_box + (' ' * title_space) + '├' + '─' * (box_width - title_min_length) + '┐' + colour_reset
+		menu_separator = (' ' * prebox_space) + colours_menu_box + '├' + ('─' * (box_width - 2)) + '┤' + colour_reset
+		menu_footer = (' ' * prebox_space) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
 	else:
-		menu_header = (' ' * prebox_space) + '┌' + ('─' * (box_width - 2)) + '┐'
+		menu_header = (' ' * prebox_space) + colours_menu_box + '┌' + ('─' * (box_width - 2)) + '┐' + colour_reset
 		menu_separator = ''
-		menu_footer = (' ' * prebox_space) + '└' + ('─' * (box_width - 2)) + '┘'
+		menu_footer = (' ' * prebox_space) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
 
 	return menu_header, menu_separator, menu_footer
 
-def generate_lines_full_width_display(title):
+def get_screen_size():
 	rows_str, columns_str = os.popen('stty size', 'r').read().split()
-	columns = int(columns_str)
 
-	header = '═' * 8 + '╣ ' + bold_title(title) + ' ╠' + '═' * (columns - 8 - 4 - len(title))
-	footer = '═' * columns
+	return int(rows_str), int(columns_str)
 
-	return header, footer
-
-def write_entry_to_file(filename, content):
-	output_pathfile = filename.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
+def write_entry_to_file(entry_name, entry_fields):
+	output_pathfile = entry_name.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
 	output_pathfile += '.txt'
+	text = ''
+
+	for field in entry_fields:
+		if field['type_id']:
+			if text: text += '\n'
+			field_name_line, field_value_line = generate_field_file(field['name'], field['value'])
+			text += field_name_line + field_value_line
+		else:
+			# appears that notes don't have a field type ID
+			text = field['value']
+			break
 
 	if not os.path.exists(output_pathfile):
 		with open(output_pathfile, 'w') as text_file:
-			text_file.write(content + '\n')
+			text_file.write(text + '\n')
 
 		print(" * {} *".format(colour_green_bright + 'written to file' + colour_reset))
 	else:
@@ -205,7 +240,7 @@ def get_db_favorites():
 		con.row_factory = lite.Row
 		cur = con.cursor()
 		cur.execute('SELECT * FROM entries WHERE is_favorite = \"1\"')
-	
+
 	return cur.fetchall()
 
 def get_db_search(text):
@@ -262,6 +297,41 @@ def db_exists():
 		print('\n! File not found! [{}]'.format(database_pathfile))
 		return False
 
+def generate_field_screen(name, value, columns):
+	name_border = 2		# number of spaces between left side of screen and name display
+	value_border = 6	# number of spaces between left side of screen and value display
+	name_line = (' ' * name_border) + name + ':' + (' ' * (columns - name_border - len(name) - 1))
+	value_line = (' ' * value_border) + value + (' ' * (columns - value_border - len(value)))
+	name_coloured = colours_single_entry_name + name_line + colour_reset
+	value_coloured = colours_single_entry_value + value_line + colour_reset
+
+	return name_coloured + value_coloured
+
+def generate_field_file(name, value):
+	value_border = 8
+
+	name_line = name + ':\n'
+	value_line = (' ' * value_border) + value
+
+	return name_line, value_line
+
+def generate_single_entry_screen(entry_name, entry_fields):
+	rows, columns = get_screen_size()
+	header = colours_single_entry_header + ('═' * 8) + '╣ ' + colours_single_entry_title + entry_name + colour_reset + colours_single_entry_header + ' ╠' + '═' * (columns - 8 - 4 - len(entry_name)) + colour_reset
+	content = ''
+	footer = colours_single_entry_footer + ('═' * columns) + colour_reset
+
+	for field in entry_fields:
+		if field['type_id']:
+			if content: content += '\n'
+			content += generate_field_screen(field['name'], field['value'], columns)
+		else:
+			# appears that notes don't have a field type ID
+			content = field['value'] + '\n'
+			break
+
+	return header + content + footer
+
 def check_opts(argv):
 	global database_pathfile
 
@@ -305,7 +375,7 @@ def main(argv):
 	while True:
 		if current_menu == 'categories':
 			clear_display()
-			category_index = menu('categories', all_categories, 'name', 'SF', False)
+			category_index = draw_menu('categories', all_categories, 'name', 'SF', False)
 			menu_stack.append(current_menu)
 
 			if category_index == -2:
@@ -319,7 +389,7 @@ def main(argv):
 			category_row = all_categories[int(category_index) - 1]
 			category_entries = get_db_entries_from_category(category_row['id'])
 			clear_display()
-			entry_index = menu(category_row['name'], category_entries, 'name', 'SBF', False)
+			entry_index = draw_menu(category_row['name'], category_entries, 'name', 'SBF', False)
 
 			if entry_index == 0:
 				current_menu = menu_stack.pop()
@@ -345,7 +415,7 @@ def main(argv):
 		if current_menu == 'search results':
 			search_entries = get_db_search(search_text)
 			clear_display()
-			entry_index = menu('Search results for \"' + search_text + '\"', search_entries, 'name', 'B', False)
+			entry_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'name', 'B', False)
 
 			if entry_index == 0:
 				current_menu = menu_stack.pop()
@@ -358,7 +428,7 @@ def main(argv):
 		if current_menu == 'favorites':
 			favorites_entries = get_db_favorites()
 			clear_display()
-			favorite_index = menu('Favorites', favorites_entries, 'name', 'B', False)
+			favorite_index = draw_menu('Favorites', favorites_entries, 'name', 'B', False)
 
 			if favorite_index == 0:
 				current_menu = menu_stack.pop()
@@ -371,31 +441,19 @@ def main(argv):
 		if current_menu == 'fields':
 			entry_name = entry_row['name']
 			entry_fields = get_db_fields_from_entry(entry_id)
-			content_text = ''
-			content_header, content_footer = generate_lines_full_width_display(entry_name)
-
-			for field in entry_fields:
-				if field['type_id']:
-					if content_text: content_text += '\n'
-					content_text += "{}:\n\t{}".format(field['name'], field['value'])
-				else:
-					# appears that notes don't have a field type ID
-					content_text = field['value']
-					break
+			content_text = generate_single_entry_screen(entry_name, entry_fields)
 
 			clear_display()
-			print(content_header)
 			print(content_text)
-			print(content_footer)
 			print()
 
 			prompt_only = False
 
 			while True:
-				user_selection = menu('', '', '', 'WB', prompt_only)
+				user_selection = draw_menu('', '', '', 'WB', prompt_only)
 
 				if user_selection == -1:
-					write_entry_to_file(entry_name, content_text)
+					write_entry_to_file(entry_name, entry_fields)
 					print()
 					prompt_only = True
 				elif user_selection == 0:
@@ -405,3 +463,4 @@ def main(argv):
 if __name__ == '__main__':
 	result = main(sys.argv[1:])
 	exit(result)
+
