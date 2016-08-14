@@ -45,7 +45,7 @@ or, if the database file has already been decrypted:
 - QT - *v4.8.6*
 - SQLCipher - *v3.8.10.2* 
 - SQLite - *v3.8.6*
-- [pudn](http://en.pudn.com/downloads151/sourcecode/graph/detail656399_en.html) - script icon
+- [Icon Archive](http://www.iconarchive.com/show/crystal-clear-icons-by-everaldo/Action-db-update-icon.html) - script icon
 
 
 Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email me](mailto:teracow@gmail.com)
@@ -53,5 +53,5 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-12) - None.
+- (2016-08-14) - None.
   
