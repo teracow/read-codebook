@@ -21,28 +21,38 @@ import getopt
 import sqlite3 as lite
 
 script_file = 'read-codebook.py'
-script_details = script_file + ' (2016-08-14)'
+script_date = '2016-08-15'
 
+# text colours
 colour_white_fg = '\033[97m'
 colour_light_fg = '\033[38;5;250m'
 colour_yellow_fg = '\033[33;40m'
-colour_green_bright = '\033[1;32;40m'
-colour_red_bright = '\033[1;31;40m'
-colour_reset = '\033[0m'
+colour_green_fg = '\033[32;40m'
+colour_red_fg = '\033[31;40m'
 
+# background colours
 colour_grey_fg = '\033[38;5;246m'
 colour_orange_fg = '\033[38;5;214m'
 colour_dark_grey_bg = '\033[48;5;234m'
-colour_bright = '\033[1m'
 
+# colour modifiers
+colour_bold = '\033[1m'
+colour_reset = '\033[0m'
+
+# colour scheme
 colours_menu_box = colour_light_fg + colour_dark_grey_bg
-colours_menu_title = colour_orange_fg + colour_bright + colour_dark_grey_bg
+colours_menu_title = colour_orange_fg + colour_bold + colour_dark_grey_bg
+colours_menu_item = colour_light_fg + colour_dark_grey_bg
 
-colours_single_entry_title = colour_white_fg + colour_bright + colour_dark_grey_bg
+colours_single_entry_title = colour_white_fg + colour_bold + colour_dark_grey_bg
 colours_single_entry_header = colour_grey_fg + colour_dark_grey_bg
 colours_single_entry_name = colour_light_fg + colour_dark_grey_bg
 colours_single_entry_value = colour_orange_fg + colour_dark_grey_bg
 colours_single_entry_footer = colour_grey_fg + colour_dark_grey_bg
+
+colours_prompt = colour_light_fg + colour_bold 
+
+script_details = '{} ({})'.format(colour_light_fg + colour_bold + script_file + colour_reset, script_date)
 
 def draw_menu(title, table, column, options, prompt_only):
 	global box_width, prebox_space
@@ -54,15 +64,11 @@ def draw_menu(title, table, column, options, prompt_only):
 	prebox_space = 1	# space before left border
 	display_menu = True
 	total = len(table)
-	prompt_template = (' ' * prebox_space) + ' select ({}): '
-
-	menu_header, menu_separator, menu_footer = generate_menu_lines(title, table, column, options, prompt_template)
+	menu_header, menu_separator, menu_footer = generate_menu_lines(title, table, column)
+	prompt = generate_menu_prompt()
 	display_menu != prompt_only
 
 	while True:
-		prompt_head = ''
-		prompt_tail = ''
-
 		if display_menu:
 			print(menu_header)
 
@@ -72,36 +78,26 @@ def draw_menu(title, table, column, options, prompt_only):
 		if total > 0:
 			if display_menu: print(menu_separator)
 
-			prompt_head += allowed_item_key('1') + ' to ' + allowed_item_key(str(total)) + ' or '
-
 		if 'S' in options:
 			if display_menu: print(generate_menu_line_option('S', 'Search'))
-
-			prompt_tail += allowed_option_key('S') + ' or '
 
 		if 'W' in options:
 			if display_menu: print(generate_menu_line_option('W', 'Write to text file'))
 
-			prompt_tail += allowed_option_key('W') + ' or '
-
 		if 'F' in options:
 			if display_menu: print(generate_menu_line_option('F', 'Favorites'))
 
-			prompt_tail += allowed_option_key('F') + ' or '
-
 		if 'B' in options:
 			if display_menu: print(generate_menu_line_option('B', 'Back'))
-
-			prompt_tail += allowed_option_key('B') + ' or '
-
-		prompt_tail += allowed_option_key('Q')
 
 		if display_menu:
 			print(generate_menu_line_option('Q', 'Quit'))
 			print(menu_footer)
 
+		print()
+
 		try:
-			user_selection = input(prompt_template.format(prompt_head + prompt_tail))
+			user_selection = input(prompt)
 			print()
 		except KeyboardInterrupt:
 			print('\n')
@@ -139,11 +135,11 @@ def draw_menu(title, table, column, options, prompt_only):
 
 def allowed_item_key(text):
 
-	return colour_orange_fg + colour_bright + colour_dark_grey_bg + text + colour_reset
+	return colour_orange_fg + colour_bold + colour_dark_grey_bg + text + colour_reset
 
 def allowed_option_key(text):
 
-	return colour_yellow_fg + colour_bright + colour_dark_grey_bg + text + colour_reset
+	return colour_yellow_fg + colour_bold + colour_dark_grey_bg + text + colour_reset
 
 def calc_line_item_width(index, text):
 
@@ -151,13 +147,17 @@ def calc_line_item_width(index, text):
 
 def generate_menu_line_item(index, text):
 
-	return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_item_key(str(index)) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + text + (' ' * (box_width - calc_line_item_width(index, text) - row_min_length)) + (' ' * row_trailing_space) + '│' + colour_reset
+	return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_item_key(str(index)) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + colours_menu_item + text + (' ' * (box_width - calc_line_item_width(index, text) - row_min_length)) + (' ' * row_trailing_space) + colour_reset + colours_menu_box + '│' + colour_reset
 
 def generate_menu_line_option(char, text):
 
 	return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_option_key(char) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + text + (' ' * (box_width - calc_line_item_width(char, text) - row_min_length)) + (' ' * row_trailing_space) + '│' + colour_reset
 
-def generate_menu_lines(title, records, record_index, options, prompt_template):
+def generate_menu_prompt():
+
+	return (' ' * prebox_space) + colours_prompt + ' select:' + colour_reset + ' '
+
+def generate_menu_lines(title, records, record_index):
 	global box_width, prebox_space, row_index_space, row_item_space, row_trailing_space, row_min_length
 
 	index = 0
@@ -177,14 +177,7 @@ def generate_menu_lines(title, records, record_index, options, prompt_template):
 		item_width = calc_line_item_width(index, record[record_index])
 		if (item_width + row_min_length) > box_width: box_width = item_width + row_min_length
 
-	prompt_length = (len(options) + 1) * 5							# each option char also has 4 other chars i.e. ' or S' = 5 chars
-	prompt_length += len(prompt_template) - 2	 					# subtract placeholder chars {}
-	if index > 0: prompt_length += len('1 to ' + str(index + 1))	# add length of index chars from '1 to n'
-	prompt_length += 3							 					# number of chars to allow for user input
-	prompt_length -= prebox_space
-
 	if title_min_length > box_width: box_width = title_min_length
-	if prompt_length > box_width: box_width = prompt_length
 
 	if title:
 		menu_header = (' ' * prebox_space) + colours_menu_box + '┌' + ('─' * title_left_border) + '┤' + (' ' * title_space) + colours_menu_title + title + colour_reset + colours_menu_box + (' ' * title_space) + '├' + '─' * (box_width - title_min_length) + '┐' + colour_reset
