@@ -82,12 +82,12 @@ def draw_menu(title, table, column, options, prompt_only):
 			if 'S' in options: print(generate_menu_line_option('S', 'Search'))
 			if 'W' in options: print(generate_menu_line_option('W', 'Write to text file'))
 			if 'F' in options: print(generate_menu_line_option('F', 'Favorites'))
+			if 'M' in options: print(generate_menu_line_option('M', 'Main menu'))
 			if 'B' in options: print(generate_menu_line_option('B', 'Back'))
 
 			print(generate_menu_line_option('Q', 'Quit'))
 			print(footer)
-
-		print()
+			print()
 
 		try:
 			user_selection = input(prompt)
@@ -107,11 +107,6 @@ def draw_menu(title, table, column, options, prompt_only):
 					user_selection = 0
 					break
 
-			if 'F' in options:
-				if user_selection.upper() == 'F':
-					user_selection = -3
-					break
-
 			if 'W' in options:
 				if user_selection.upper() == 'W':
 					user_selection = -1
@@ -120,6 +115,16 @@ def draw_menu(title, table, column, options, prompt_only):
 			if 'S' in options:
 				if user_selection.upper() == 'S':
 					user_selection = -2
+					break
+
+			if 'F' in options:
+				if user_selection.upper() == 'F':
+					user_selection = -3
+					break
+
+			if 'M' in options:
+				if user_selection.upper() == 'M':
+					user_selection = -4
 					break
 
 		display_menu = False			# don't re-display menu - only show prompt
@@ -361,32 +366,35 @@ def main(argv):
 	while True:
 		if current_menu == 'categories':
 			clear_display()
-			category_index = draw_menu('categories', all_categories, 'name', 'SF', False)
+			category_menu_index = draw_menu('categories', all_categories, 'name', 'SF', False)
 			menu_stack.append(current_menu)
 
-			if category_index == -2:
+			if category_menu_index == -2:
 				current_menu = 'search'
-			elif category_index == -3:
+			elif category_menu_index == -3:
 				current_menu = 'favorites'
 			else:
 				current_menu = 'entries'
 
 		if current_menu == 'entries':
-			category_row = all_categories[int(category_index) - 1]
+			category_row = all_categories[int(category_menu_index) - 1]
 			category_entries = get_db_entries_from_category(category_row['id'])
 			clear_display()
-			entry_index = draw_menu(category_row['name'], category_entries, 'name', 'SBF', False)
+			entry_menu_index = draw_menu(category_row['name'], category_entries, 'name', 'SBFM', False)
 
-			if entry_index == 0:
+			if entry_menu_index == 0:
 				current_menu = menu_stack.pop()
-			elif entry_index == -2:
+			elif entry_menu_index == -2:
 				menu_stack.append(current_menu)
 				current_menu = 'search'
-			elif entry_index == -3:
+			elif entry_menu_index == -3:
 				menu_stack.append(current_menu)
 				current_menu = 'favorites'
+			elif entry_menu_index == -4:
+				menu_stack = []
+				current_menu = 'categories'
 			else:
-				entry_row = category_entries[int(entry_index) - 1]
+				entry_row = category_entries[int(entry_menu_index) - 1]
 				entry_id = entry_row['id']
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
@@ -401,12 +409,15 @@ def main(argv):
 		if current_menu == 'search results':
 			search_entries = get_db_search(search_text)
 			clear_display()
-			entry_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'name', 'B', False)
+			search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'name', 'BM', False)
 
-			if entry_index == 0:
+			if search_menu_index == 0:
 				current_menu = menu_stack.pop()
+			elif search_menu_index == -4:
+				menu_stack = []
+				current_menu = 'categories'
 			else:
-				entry_row = search_entries[int(entry_index) - 1]
+				entry_row = search_entries[int(search_menu_index) - 1]
 				entry_id = entry_row['entry_id']
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
@@ -414,12 +425,15 @@ def main(argv):
 		if current_menu == 'favorites':
 			favorites_entries = get_db_favorites()
 			clear_display()
-			favorite_index = draw_menu('Favorites', favorites_entries, 'name', 'B', False)
+			favorite_menu_index = draw_menu('Favorites', favorites_entries, 'name', 'BM', False)
 
-			if favorite_index == 0:
+			if favorite_menu_index == 0:
 				current_menu = menu_stack.pop()
+			elif favorite_menu_index == -4:
+				menu_stack = []
+				current_menu = 'categories'
 			else:
-				entry_row = favorites_entries[int(favorite_index) - 1]
+				entry_row = favorites_entries[int(favorite_menu_index) - 1]
 				entry_id = entry_row['id']
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
@@ -436,14 +450,18 @@ def main(argv):
 			prompt_only = False
 
 			while True:
-				user_selection = draw_menu('', '', '', 'WB', prompt_only)
+				fields_menu_index = draw_menu('', '', '', 'BWM', prompt_only)
 
-				if user_selection == -1:
+				if fields_menu_index == 0:
+					current_menu = menu_stack.pop()
+					break
+				elif fields_menu_index == -1:
 					write_entry_to_file(entry_name, entry_fields)
 					print()
 					prompt_only = True
-				elif user_selection == 0:
-					current_menu = menu_stack.pop()
+				elif fields_menu_index == -4:
+					menu_stack = []
+					current_menu = 'categories'
 					break
 
 if __name__ == '__main__':
