@@ -54,6 +54,9 @@ colours_prompt = colour_light_fg + colour_bold
 
 script_details = '{} ({})'.format(colour_light_fg + colour_bold + script_file + colour_reset, script_date)
 
+colours_write_ok = colour_green_fg + colour_bold
+colours_write_fail = colour_red_fg + colour_bold
+
 def draw_menu(title, table, column, options, prompt_only):
 	global box_width, prebox_space
 
@@ -64,35 +67,25 @@ def draw_menu(title, table, column, options, prompt_only):
 	prebox_space = 1	# space before left border
 	display_menu = True
 	total = len(table)
-	menu_header, menu_separator, menu_footer = generate_menu_lines(title, table, column)
+	header, separator, footer = generate_menu_lines(title, table, column)
 	prompt = generate_menu_prompt()
 	display_menu != prompt_only
 
 	while True:
 		if display_menu:
-			print(menu_header)
+			print(header)
 
 			for index, record in enumerate(table):
 				print(generate_menu_line_item(index + 1, record[column]))
 
-		if total > 0:
-			if display_menu: print(menu_separator)
+			if total > 0: print(separator)
+			if 'S' in options: print(generate_menu_line_option('S', 'Search'))
+			if 'W' in options: print(generate_menu_line_option('W', 'Write to text file'))
+			if 'F' in options: print(generate_menu_line_option('F', 'Favorites'))
+			if 'B' in options: print(generate_menu_line_option('B', 'Back'))
 
-		if 'S' in options:
-			if display_menu: print(generate_menu_line_option('S', 'Search'))
-
-		if 'W' in options:
-			if display_menu: print(generate_menu_line_option('W', 'Write to text file'))
-
-		if 'F' in options:
-			if display_menu: print(generate_menu_line_option('F', 'Favorites'))
-
-		if 'B' in options:
-			if display_menu: print(generate_menu_line_option('B', 'Back'))
-
-		if display_menu:
 			print(generate_menu_line_option('Q', 'Quit'))
-			print(menu_footer)
+			print(footer)
 
 		print()
 
@@ -214,9 +207,9 @@ def write_entry_to_file(entry_name, entry_fields):
 		with open(output_pathfile, 'w') as text_file:
 			text_file.write(text + '\n')
 
-		print(" * {} *".format(colour_green_bright + 'written to file' + colour_reset))
+		print(" * {} *".format(colours_write_ok + 'written to file' + colour_reset))
 	else:
-		print(" ! {} !".format(colour_red_bright + 'could not write (file already exists)' + colour_reset))
+		print(" ! {} !".format(colours_write_fail + 'could not write (file already exists)' + colour_reset))
 
 	return
 
@@ -434,10 +427,10 @@ def main(argv):
 		if current_menu == 'fields':
 			entry_name = entry_row['name']
 			entry_fields = get_db_fields_from_entry(entry_id)
-			content_text = generate_single_entry_screen(entry_name, entry_fields)
+			content = generate_single_entry_screen(entry_name, entry_fields)
 
 			clear_display()
-			print(content_text)
+			print(content)
 			print()
 
 			prompt_only = False
