@@ -68,7 +68,7 @@ def menu(title, table, column, options, prompt_only):
 			prompt_tail += allowed_key('W') + ' or '
 
 		if 'F' in options:
-			if display_menu: print(generate_line_item_display('F', 'Show Favorites'))
+			if display_menu: print(generate_line_item_display('F', 'Favorites'))
 
 			prompt_tail += allowed_key('F') + ' or '
 
@@ -319,13 +319,16 @@ def main(argv):
 			category_row = all_categories[int(category_index) - 1]
 			category_entries = get_db_entries_from_category(category_row['id'])
 			clear_display()
-			entry_index = menu(category_row['name'], category_entries, 'name', 'SB', False)
+			entry_index = menu(category_row['name'], category_entries, 'name', 'SBF', False)
 
 			if entry_index == 0:
 				current_menu = menu_stack.pop()
 			elif entry_index == -2:
 				menu_stack.append(current_menu)
 				current_menu = 'search'
+			elif entry_index == -3:
+				menu_stack.append(current_menu)
+				current_menu = 'favorites'
 			else:
 				entry_row = category_entries[int(entry_index) - 1]
 				entry_id = entry_row['id']
