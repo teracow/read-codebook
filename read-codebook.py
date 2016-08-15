@@ -70,7 +70,7 @@ def draw_menu(title, table, column, options, prompt_only = False):
     display_menu = True
     total = len(table)
     header, separator, footer = generate_menu_lines(title, table, column)
-    display_menu != prompt_only
+    if prompt_only: display_menu = False
 
     while True:
         if display_menu:
@@ -128,7 +128,7 @@ def draw_menu(title, table, column, options, prompt_only = False):
                     user_selection = -4
                     break
 
-        display_menu = False            # don't re-display menu - only show prompt
+        display_menu = False            # for any other char - only re-show prompt
 
     return user_selection
 
@@ -495,7 +495,6 @@ def main(argv):
 
             reset_display()
             print(content + '\n')
-            #print()
 
             prompt_only = False
 
