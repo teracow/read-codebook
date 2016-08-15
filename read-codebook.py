@@ -70,7 +70,6 @@ def draw_menu(title, table, column, options, prompt_only):
     display_menu = True
     total = len(table)
     header, separator, footer = generate_menu_lines(title, table, column)
-    prompt = generate_menu_prompt()
     display_menu != prompt_only
 
     while True:
@@ -92,7 +91,7 @@ def draw_menu(title, table, column, options, prompt_only):
             print()
 
         try:
-            user_selection = input(prompt)
+            user_selection = input(generate_menu_prompt())
             print()
         except KeyboardInterrupt:
             print('\n')
@@ -133,30 +132,6 @@ def draw_menu(title, table, column, options, prompt_only):
 
     return user_selection
 
-def allowed_item_key(text):
-
-    return colour_orange_fg + colour_bold + colour_dark_grey_bg + text + colour_reset
-
-def allowed_option_key(text):
-
-    return colour_yellow_fg + colour_bold + colour_dark_grey_bg + text + colour_reset
-
-def calc_line_item_width(index, text):
-
-    return len(str(index) + text)
-
-def generate_menu_line_item(index, text):
-
-    return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_item_key(str(index)) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + colours_menu_item + text + (' ' * (box_width - calc_line_item_width(index, text) - row_min_length)) + (' ' * row_trailing_space) + colour_reset + colours_menu_box + '│' + colour_reset
-
-def generate_menu_line_option(char, text):
-
-    return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_option_key(char) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + text + (' ' * (box_width - calc_line_item_width(char, text) - row_min_length)) + (' ' * row_trailing_space) + '│' + colour_reset
-
-def generate_menu_prompt():
-
-    return (' ' * prebox_space) + colours_prompt + ' select:' + colour_reset + ' '
-
 def generate_menu_lines(title, records, record_index):
     global box_width, prebox_space, row_index_space, row_item_space, row_trailing_space, row_min_length
 
@@ -190,93 +165,55 @@ def generate_menu_lines(title, records, record_index):
 
     return menu_header, menu_separator, menu_footer
 
+def generate_menu_line_item(index, text):
+
+    return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_item_key(str(index)) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + colours_menu_item + text + (' ' * (box_width - calc_line_item_width(index, text) - row_min_length)) + (' ' * row_trailing_space) + colour_reset + colours_menu_box + '│' + colour_reset
+
+def generate_menu_line_option(char, text):
+
+    return (' ' * prebox_space) + colours_menu_box + '│' + (' ' * row_index_space) + '(' + allowed_option_key(char) + colour_reset + colours_menu_box + ')' + (' ' * row_item_space) + text + (' ' * (box_width - calc_line_item_width(char, text) - row_min_length)) + (' ' * row_trailing_space) + '│' + colour_reset
+
+def calc_line_item_width(index, text):
+
+    return len(str(index) + text)
+
+def generate_menu_prompt():
+
+    return (' ' * prebox_space) + colours_prompt + ' select:' + colour_reset + ' '
+
+def generate_search_prompt():
+
+    return (' ' * prebox_space) + colours_prompt + ' enter text to search for: ' + colour_reset + ' '
+
+def allowed_item_key(text):
+
+    return colour_orange_fg + colour_bold + colour_dark_grey_bg + text + colour_reset
+
+def allowed_option_key(text):
+
+    return colour_yellow_fg + colour_bold + colour_dark_grey_bg + text + colour_reset
+
 def get_screen_size():
     rows_str, columns_str = os.popen('stty size', 'r').read().split()
 
     return int(rows_str), int(columns_str)
 
-def write_entry_to_file(entry_name, entry_fields):
-    output_pathfile = entry_name.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
-    output_pathfile += '.txt'
-    content = ''
-
-    for field in entry_fields:
-        if field['data_type'] == 'note' or field['entry_type'] == 1:
-            content += generate_note_file(field['value'])
-            break
-        elif field['entry_type'] == 0:
-            content += generate_field_file(field['field_name'], field['value'])
-        else:
-            content += generate_note_file(field['value'])
-            break
-
-    if not os.path.exists(output_pathfile):
-        with open(output_pathfile, 'w') as text_file:
-            text_file.write(content)
-
-        print(" * {} *".format(colours_write_ok + 'written to file' + colour_reset))
-    else:
-        print(" ! {} !".format(colours_write_fail + 'could not write (file already exists)' + colour_reset))
-
-    return
-
-def clear_display():
+def reset_display():
     print('\033c')
     print((' ' * prebox_space) + ' ' + script_details + '\n')
 
     return
 
-def get_db_favorites():
+def get_db_categories():
     con = lite.connect(database_pathfile)
-    base_sql = 'SELECT  entries.id          AS entry_id,\
-                        entries.name        AS entry_name,\
-                        entries.type        AS entry_type,\
-                        entries.is_favorite AS favorite\
-                FROM entries '
+    base_sql = 'SELECT  id          AS category_id,\
+                        name        AS category_name\
+                FROM categories '
 
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE favorite = 1 ORDER BY entry_name')
-
-    return cur.fetchall()
-
-def get_db_search(text):
-    con = lite.connect(database_pathfile)
-    base_sql = 'SELECT  entries.id          AS entry_id,\
-                        entries.name        AS entry_name,\
-                        entries.type        AS entry_type,\
-                        fields.value\
-                FROM entries\
-                        JOIN fields         ON fields.entry_id = entries.id '
-
-    with con:
-        con.row_factory = lite.Row
-        cur = con.cursor()
-        cur.execute(base_sql + 'WHERE value LIKE ?', ('%' + text + '%',))
-
-    return cur.fetchall()
-
-def get_db_fields_from_entry(entry_id):
-    con = lite.connect(database_pathfile)
-    base_sql = 'SELECT  category_id,\
-                        categories.name     AS category_name,\
-                        entry_id,\
-                        entries.name        AS entry_name,\
-                        entries.type        AS entry_type,\
-                        entries.is_favorite AS favorite,\
-                        types.name          AS field_name,\
-                        fields.value,\
-                        types.mode          AS data_type\
-                FROM categories\
-                        JOIN entries        ON entries.category_id = categories.id\
-                        JOIN fields         ON fields.entry_id = entries.id\
-                LEFT    JOIN types          ON types.id = fields.type_id '
-
-    with con:
-        con.row_factory = lite.Row
-        cur = con.cursor()
-        cur.execute(base_sql + 'WHERE entry_id = ?', (entry_id,))
+        cur.execute(base_sql + 'ORDER BY category_name')
 
     return cur.fetchall()
 
@@ -297,25 +234,75 @@ def get_db_entries_from_category(category_id):
 
     return cur.fetchall()
 
-def get_db_categories():
+def get_db_fields_from_entry(entry_id):
     con = lite.connect(database_pathfile)
-    base_sql = 'SELECT  id          AS category_id,\
-                        name        AS category_name\
-                FROM categories '
+    base_sql = 'SELECT  entry_id,\
+                        entries.name        AS entry_name,\
+                        entries.type        AS entry_type,\
+                        entries.is_favorite AS favorite,\
+                        types.name          AS field_name,\
+                        fields.value,\
+                        types.mode          AS data_type\
+                FROM entries\
+                        JOIN fields         ON fields.entry_id = entries.id\
+                LEFT    JOIN types          ON types.id = fields.type_id '
 
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'ORDER BY category_name')
+        cur.execute(base_sql + 'WHERE entry_id = ?', (entry_id,))
 
     return cur.fetchall()
 
-def db_exists():
-    if os.path.exists(database_pathfile):
-        return True
-    else:
-        print('\n! File not found! [{}]'.format(database_pathfile))
-        return False
+def get_db_search(text):
+    con = lite.connect(database_pathfile)
+    base_sql = 'SELECT  entries.id          AS entry_id,\
+                        entries.name        AS entry_name,\
+                        entries.type        AS entry_type,\
+                        fields.value\
+                FROM entries\
+                        JOIN fields         ON fields.entry_id = entries.id\
+                LEFT    JOIN types          ON types.id = fields.type_id '
+
+    with con:
+        con.row_factory = lite.Row
+        cur = con.cursor()
+        cur.execute(base_sql + 'WHERE value LIKE ?', ('%' + text + '%',))
+
+    return cur.fetchall()
+
+def get_db_favorites():
+    con = lite.connect(database_pathfile)
+    base_sql = 'SELECT  entries.id          AS entry_id,\
+                        entries.name        AS entry_name,\
+                        entries.type        AS entry_type,\
+                        entries.is_favorite AS favorite\
+                FROM entries '
+
+    with con:
+        con.row_factory = lite.Row
+        cur = con.cursor()
+        cur.execute(base_sql + 'WHERE favorite = 1 ORDER BY entry_name')
+
+    return cur.fetchall()
+
+def generate_single_entry_screen(entry_name, entry_fields):
+    rows, columns = get_screen_size()
+    header = colours_single_entry_header + ('═' * 8) + '╣ ' + colours_single_entry_title + entry_name + colour_reset + colours_single_entry_header + ' ╠' + '═' * (columns - 8 - 4 - len(entry_name)) + colour_reset
+    content = ''
+    footer = colours_single_entry_footer + ('═' * columns) + colour_reset
+
+    for field in entry_fields:
+        if field['data_type'] == 'note' or field['entry_type'] == 1:
+            content += generate_note_screen(field['value'], columns)
+            break
+        elif field['entry_type'] == 0:
+            content += generate_field_screen(field['field_name'], field['value'], columns)
+        else:
+            content += generate_note_screen(field['value'], columns)
+            break
+
+    return header + content + footer
 
 def generate_note_screen(value, columns):
     name = 'Note'
@@ -358,23 +345,30 @@ def generate_field_file(name, value):
 
     return name_line + value_line
 
-def generate_single_entry_screen(entry_name, entry_fields):
-    rows, columns = get_screen_size()
-    header = colours_single_entry_header + ('═' * 8) + '╣ ' + colours_single_entry_title + entry_name + colour_reset + colours_single_entry_header + ' ╠' + '═' * (columns - 8 - 4 - len(entry_name)) + colour_reset
+def write_entry_to_file(entry_name, entry_fields):
+    output_pathfile = entry_name.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
+    output_pathfile += '.txt'
     content = ''
-    footer = colours_single_entry_footer + ('═' * columns) + colour_reset
 
     for field in entry_fields:
         if field['data_type'] == 'note' or field['entry_type'] == 1:
-            content += generate_note_screen(field['value'], columns)
+            content += generate_note_file(field['value'])
             break
         elif field['entry_type'] == 0:
-            content += generate_field_screen(field['field_name'], field['value'], columns)
+            content += generate_field_file(field['field_name'], field['value'])
         else:
-            content += generate_note_screen(field['value'], columns)
+            content += generate_note_file(field['value'])
             break
 
-    return header + content + footer
+    if not os.path.exists(output_pathfile):
+        with open(output_pathfile, 'w') as text_file:
+            text_file.write(content)
+
+        print(" * {} *".format(colours_write_ok + 'written to file' + colour_reset))
+    else:
+        print(" ! {} !".format(colours_write_fail + 'could not write (file already exists)' + colour_reset))
+
+    return
 
 def check_opts(argv):
     global database_pathfile
@@ -405,6 +399,13 @@ def check_opts(argv):
 
     return 0
 
+def db_exists():
+    if os.path.exists(database_pathfile):
+        return True
+    else:
+        print('\n! File not found! [{}]'.format(database_pathfile))
+        return False
+
 def main(argv):
     print(script_details)
 
@@ -418,7 +419,7 @@ def main(argv):
 
     while True:
         if current_menu == 'categories':
-            clear_display()
+            reset_display()
             category_menu_index = draw_menu('categories', all_categories, 'category_name', 'SF', False)
             menu_stack.append(current_menu)
 
@@ -432,7 +433,7 @@ def main(argv):
         if current_menu == 'entries':
             category_row = all_categories[int(category_menu_index) - 1]
             category_entries = get_db_entries_from_category(category_row['category_id'])
-            clear_display()
+            reset_display()
             entry_menu_index = draw_menu(category_row['category_name'], category_entries, 'entry_name', 'SBFM', False)
 
             if entry_menu_index == 0:
@@ -453,14 +454,14 @@ def main(argv):
 
         if current_menu == 'search':
             try:
-                search_text = input((' ' * prebox_space) + ' enter text to search for: ')
+                search_text = input(generate_search_prompt())
                 current_menu = 'search results'
             except KeyboardInterrupt:
                 current_menu = menu_stack.pop()
 
         if current_menu == 'search results':
             search_entries = get_db_search(search_text)
-            clear_display()
+            reset_display()
             search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'entry_name', 'BM', False)
 
             if search_menu_index == 0:
@@ -475,7 +476,7 @@ def main(argv):
 
         if current_menu == 'favorites':
             favorites_entries = get_db_favorites()
-            clear_display()
+            reset_display()
             favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BM', False)
 
             if favorite_menu_index == 0:
@@ -494,7 +495,7 @@ def main(argv):
             entry_fields = get_db_fields_from_entry(entry_id)
             content = generate_single_entry_screen(entry_name, entry_fields)
 
-            clear_display()
+            reset_display()
             print(content)
             print()
 
