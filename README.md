@@ -26,6 +26,8 @@ These script were written for my convenience so that I can access the '**strip.d
 
 At this time, I've decided not to use pysqlcipher to reduce the dependance on other packages.
 
+This is also a project for me to learn something of SQL - having never used it before.
+
 ---
 ###**Usage:**
 
@@ -53,5 +55,5 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-14) - None.
+- (2016-08-15) - None.
   

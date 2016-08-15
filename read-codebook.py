@@ -50,7 +50,7 @@ colours_single_entry_name = colour_light_fg + colour_dark_grey_bg
 colours_single_entry_value = colour_orange_fg + colour_dark_grey_bg
 colours_single_entry_footer = colour_grey_fg + colour_dark_grey_bg
 
-colours_prompt = colour_light_fg + colour_bold 
+colours_prompt = colour_light_fg + colour_bold
 
 script_details = '{} ({})'.format(colour_light_fg + colour_bold + script_file + colour_reset, script_date)
 
@@ -58,6 +58,20 @@ colours_write_ok = colour_green_fg + colour_bold
 colours_write_fail = colour_red_fg + colour_bold
 
 prebox_space = 1		# space before left border
+
+base_sql = 'SELECT 	category_id,\
+					categories.name		AS category_name,\
+					entry_id,\
+					entries.name		AS entry_name,\
+					entries.type		AS entry_type,\
+					entries.is_favorite	AS favorite,\
+					types.name		AS field_name,\
+					fields.value,\
+					types.mode		AS data_type\
+			FROM categories\
+					JOIN entries	ON entries.category_id = categories.id\
+					JOIN fields	ON fields.entry_id = entries.id\
+			LEFT	JOIN types 	ON types.id = fields.type_id '
 
 def draw_menu(title, table, column, options, prompt_only):
 	global box_width
@@ -198,21 +212,21 @@ def get_screen_size():
 def write_entry_to_file(entry_name, entry_fields):
 	output_pathfile = entry_name.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
 	output_pathfile += '.txt'
-	text = ''
+	content = ''
 
 	for field in entry_fields:
-		if field['type_id']:
-			if text: text += '\n'
-			field_name_line, field_value_line = generate_field_file(field['name'], field['value'])
-			text += field_name_line + field_value_line
+		if field['data_type'] == 'note' or field['entry_type'] == 1:
+			content += generate_note_file(field['value'])
+			break
+		elif field['entry_type'] == 0:
+			content += generate_field_file(field['field_name'], field['value'])
 		else:
-			# appears that notes don't have a field type ID
-			text = field['value']
+			content += generate_note_file(field['value'])
 			break
 
 	if not os.path.exists(output_pathfile):
 		with open(output_pathfile, 'w') as text_file:
-			text_file.write(text + '\n')
+			text_file.write(content)
 
 		print(" * {} *".format(colours_write_ok + 'written to file' + colour_reset))
 	else:
@@ -252,16 +266,19 @@ def get_db_fields_from_entry(entry_id):
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
+		cur.execute(base_sql + ' WHERE entry_id = ?', (entry_id,))
 
-		# try joining fields to field types first. This will return none for notes as they don't have a field type set.
-		cur.execute('SELECT * FROM fields JOIN types ON fields.type_id = types.id WHERE entry_id = ?', (entry_id,))
-		result = cur.fetchall()
+	return cur.fetchall()
 
-		if len(result) == 0:		# this may be a note, so try query again without join
-			cur.execute('SELECT * FROM fields WHERE entry_id = ?', (entry_id,))
-			result = cur.fetchall()
+def get_db_entries(category_id):
+	con = lite.connect(database_pathfile)
 
-	return result
+	with con:
+		con.row_factory = lite.Row
+		cur = con.cursor()
+		cur.execute('SELECT * FROM entries WHERE category_id = ? ORDER BY name', (category_id,))
+
+	return cur.fetchall()
 
 def get_db_entries_from_category(category_id):
 	con = lite.connect(database_pathfile)
@@ -290,6 +307,21 @@ def db_exists():
 		print('\n! File not found! [{}]'.format(database_pathfile))
 		return False
 
+def generate_note_screen(value, columns):
+	name = 'Note'
+	name_border = 2		# number of spaces between left side of screen and name display
+	value_border = 6	# number of spaces between left side of screen and value display
+	name_line = (' ' * name_border) + name + ':' + (' ' * (columns - name_border - len(name) - 1))
+	value_line = ''
+
+	for line in value.splitlines():
+		value_line += (' ' * value_border) + line + (' ' * (columns - value_border - len(line)))
+
+	name_coloured = colours_single_entry_name + name_line + colour_reset
+	value_coloured = colours_single_entry_value + value_line + colour_reset
+
+	return name_coloured + value_coloured
+
 def generate_field_screen(name, value, columns):
 	name_border = 2		# number of spaces between left side of screen and name display
 	value_border = 6	# number of spaces between left side of screen and value display
@@ -300,13 +332,21 @@ def generate_field_screen(name, value, columns):
 
 	return name_coloured + value_coloured
 
+def generate_note_file(value):
+	value_line = ''
+
+	for line in value.splitlines():
+		value_line += line + '\n'
+
+	return value_line
+
 def generate_field_file(name, value):
 	value_border = 8
 
 	name_line = name + ':\n'
-	value_line = (' ' * value_border) + value
+	value_line = (' ' * value_border) + value + '\n'
 
-	return name_line, value_line
+	return name_line + value_line
 
 def generate_single_entry_screen(entry_name, entry_fields):
 	rows, columns = get_screen_size()
@@ -315,12 +355,13 @@ def generate_single_entry_screen(entry_name, entry_fields):
 	footer = colours_single_entry_footer + ('═' * columns) + colour_reset
 
 	for field in entry_fields:
-		if field['type_id']:
-			if content: content += '\n'
-			content += generate_field_screen(field['name'], field['value'], columns)
+		if field['data_type'] == 'note' or field['entry_type'] == 1:
+			content += generate_note_screen(field['value'], columns)
+			break
+		elif field['entry_type'] == 0:
+			content += generate_field_screen(field['field_name'], field['value'], columns)
 		else:
-			# appears that notes don't have a field type ID
-			content = field['value'] + '\n'
+			content += generate_note_screen(field['value'], columns)
 			break
 
 	return header + content + footer
