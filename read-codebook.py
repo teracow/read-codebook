@@ -294,18 +294,25 @@ def generate_single_entry_screen(entry_name, entry_fields):
 
     for field in entry_fields:
         if field['data_type'] == 'note' or field['entry_type'] == 1:
-            content += generate_note_screen(field['value'], columns)
+            content += generate_note_screen('Note', field['value'], columns)
             break
-        elif field['entry_type'] == 0:
-            content += generate_field_screen(field['field_name'], field['value'], columns)
         else:
-            content += generate_note_screen(field['value'], columns)
-            break
+            content += generate_field_screen(field['field_name'], field['value'], columns)
 
     return header + content + footer
 
-def generate_note_screen(value, columns):
-    name = 'Note'
+def generate_single_entry_file(entry_fields):
+    content = ''
+
+    for field in entry_fields:
+        if field['data_type'] == 'note' or field['entry_type'] == 1:
+            content += generate_field_file('Note', field['value'])
+        else:
+            content += generate_field_file(field['field_name'], field['value']) + '\n'
+
+    return content
+
+def generate_note_screen(name, value, columns):
     name_border = 2     # spaces between left side of screen and name display
     value_border = 6    # spaces between left side of screen and value display
     name_line = (' ' * name_border) + name + ':' + (' ' * (columns - name_border - len(name) - 1))
@@ -329,34 +336,16 @@ def generate_field_screen(name, value, columns):
 
     return name_coloured + value_coloured
 
-def generate_note_file(value):
-    value_line = ''
-
-    for line in value.splitlines():
-        value_line += line + '\n'
-
-    return value_line
-
 def generate_field_file(name, value):
     name_line = name + ':\n'
-    value_line = value + '\n\n'
+    value_line = value + '\n'
 
     return name_line + value_line
 
 def write_entry_to_file(entry_name, entry_fields):
     output_pathfile = entry_name.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_')
     output_pathfile += '.txt'
-    content = ''
-
-    for field in entry_fields:
-        if field['data_type'] == 'note' or field['entry_type'] == 1:
-            content += generate_note_file(field['value'])
-            break
-        elif field['entry_type'] == 0:
-            content += generate_field_file(field['field_name'], field['value'])
-        else:
-            content += generate_note_file(field['value'])
-            break
+    content = generate_single_entry_file(entry_fields)
 
     if not os.path.exists(output_pathfile):
         with open(output_pathfile, 'w') as text_file:
@@ -364,7 +353,7 @@ def write_entry_to_file(entry_name, entry_fields):
 
         print(" * {} *\n".format(colours_write_ok + 'written to file' + colour_reset))
     else:
-        print(" ! {} !\n".format(colours_write_fail + 'could not write (file already exists)' + colour_reset))
+        print(" ! {} !\n".format(colours_write_fail + 'did not write (file already exists)' + colour_reset))
 
     return
 
