@@ -59,20 +59,6 @@ colours_write_fail = colour_red_fg + colour_bold
 
 prebox_space = 1		# space before left border
 
-base_sql = 'SELECT 	category_id,\
-					categories.name		AS category_name,\
-					entry_id,\
-					entries.name		AS entry_name,\
-					entries.type		AS entry_type,\
-					entries.is_favorite	AS favorite,\
-					types.name		AS field_name,\
-					fields.value,\
-					types.mode		AS data_type\
-			FROM categories\
-					JOIN entries	ON entries.category_id = categories.id\
-					JOIN fields	ON fields.entry_id = entries.id\
-			LEFT	JOIN types 	ON types.id = fields.type_id '
-
 def draw_menu(title, table, column, options, prompt_only):
 	global box_width
 
@@ -242,61 +228,85 @@ def clear_display():
 
 def get_db_favorites():
 	con = lite.connect(database_pathfile)
+	base_sql = 'SELECT 	entries.id			AS entry_id,\
+						entries.name		AS entry_name,\
+						entries.type		AS entry_type,\
+						entries.is_favorite	AS favorite\
+				FROM entries '
 
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute('SELECT * FROM entries WHERE is_favorite = \"1\"')
+		cur.execute(base_sql + 'WHERE favorite = 1 ORDER BY entry_name')
 
 	return cur.fetchall()
 
 def get_db_search(text):
 	con = lite.connect(database_pathfile)
+	base_sql = 'SELECT 	entries.id			AS entry_id,\
+						entries.name		AS entry_name,\
+						entries.type		AS entry_type,\
+						fields.value\
+				FROM entries\
+						JOIN fields			ON fields.entry_id = entries.id '
 
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute('SELECT * FROM fields JOIN entries ON fields.entry_id = entries.id WHERE value LIKE ?', ('%' + text + '%',))
+		cur.execute(base_sql + 'WHERE value LIKE ?', ('%' + text + '%',))
 
 	return cur.fetchall()
 
 def get_db_fields_from_entry(entry_id):
 	con = lite.connect(database_pathfile)
+	base_sql = 'SELECT 	category_id,\
+						categories.name		AS category_name,\
+						entry_id,\
+						entries.name		AS entry_name,\
+						entries.type		AS entry_type,\
+						entries.is_favorite	AS favorite,\
+						types.name			AS field_name,\
+						fields.value,\
+						types.mode			AS data_type\
+				FROM categories\
+						JOIN entries		ON entries.category_id = categories.id\
+						JOIN fields			ON fields.entry_id = entries.id\
+				LEFT	JOIN types 			ON types.id = fields.type_id '
 
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute(base_sql + ' WHERE entry_id = ?', (entry_id,))
-
-	return cur.fetchall()
-
-def get_db_entries(category_id):
-	con = lite.connect(database_pathfile)
-
-	with con:
-		con.row_factory = lite.Row
-		cur = con.cursor()
-		cur.execute('SELECT * FROM entries WHERE category_id = ? ORDER BY name', (category_id,))
+		cur.execute(base_sql + 'WHERE entry_id = ?', (entry_id,))
 
 	return cur.fetchall()
 
 def get_db_entries_from_category(category_id):
 	con = lite.connect(database_pathfile)
+	base_sql = 'SELECT 	categories.id		AS category_id,\
+						categories.name		AS category_name,\
+						entries.id			AS entry_id,\
+						entries.name		AS entry_name,\
+						entries.type		AS entry_type\
+				FROM categories\
+						JOIN entries		ON entries.category_id = categories.id '
 
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute('SELECT * FROM entries WHERE category_id = ? ORDER BY name', (category_id,))
+		cur.execute(base_sql + 'WHERE category_id = ? ORDER BY entry_name', (category_id,))
 
 	return cur.fetchall()
 
 def get_db_categories():
 	con = lite.connect(database_pathfile)
+	base_sql = 'SELECT 	id			AS category_id,\
+						name		AS category_name\
+				FROM categories '
 
 	with con:
 		con.row_factory = lite.Row
 		cur = con.cursor()
-		cur.execute('SELECT id, name FROM categories ORDER BY name')
+		cur.execute(base_sql + 'ORDER BY category_name')
 
 	return cur.fetchall()
 
@@ -409,7 +419,7 @@ def main(argv):
 	while True:
 		if current_menu == 'categories':
 			clear_display()
-			category_menu_index = draw_menu('categories', all_categories, 'name', 'SF', False)
+			category_menu_index = draw_menu('categories', all_categories, 'category_name', 'SF', False)
 			menu_stack.append(current_menu)
 
 			if category_menu_index == -2:
@@ -421,9 +431,9 @@ def main(argv):
 
 		if current_menu == 'entries':
 			category_row = all_categories[int(category_menu_index) - 1]
-			category_entries = get_db_entries_from_category(category_row['id'])
+			category_entries = get_db_entries_from_category(category_row['category_id'])
 			clear_display()
-			entry_menu_index = draw_menu(category_row['name'], category_entries, 'name', 'SBFM', False)
+			entry_menu_index = draw_menu(category_row['category_name'], category_entries, 'entry_name', 'SBFM', False)
 
 			if entry_menu_index == 0:
 				current_menu = menu_stack.pop()
@@ -438,7 +448,7 @@ def main(argv):
 				current_menu = 'categories'
 			else:
 				entry_row = category_entries[int(entry_menu_index) - 1]
-				entry_id = entry_row['id']
+				entry_id = entry_row['entry_id']
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
 
@@ -452,7 +462,7 @@ def main(argv):
 		if current_menu == 'search results':
 			search_entries = get_db_search(search_text)
 			clear_display()
-			search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'name', 'BM', False)
+			search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'entry_name', 'BM', False)
 
 			if search_menu_index == 0:
 				current_menu = menu_stack.pop()
@@ -468,7 +478,7 @@ def main(argv):
 		if current_menu == 'favorites':
 			favorites_entries = get_db_favorites()
 			clear_display()
-			favorite_menu_index = draw_menu('Favorites', favorites_entries, 'name', 'BM', False)
+			favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BM', False)
 
 			if favorite_menu_index == 0:
 				current_menu = menu_stack.pop()
@@ -477,12 +487,12 @@ def main(argv):
 				current_menu = 'categories'
 			else:
 				entry_row = favorites_entries[int(favorite_menu_index) - 1]
-				entry_id = entry_row['id']
+				entry_id = entry_row['entry_id']
 				menu_stack.append(current_menu)
 				current_menu = 'fields'
 
 		if current_menu == 'fields':
-			entry_name = entry_row['name']
+			entry_name = entry_row['entry_name']
 			entry_fields = get_db_fields_from_entry(entry_id)
 			content = generate_single_entry_screen(entry_name, entry_fields)
 
