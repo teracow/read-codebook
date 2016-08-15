@@ -338,10 +338,8 @@ def generate_note_file(value):
     return value_line
 
 def generate_field_file(name, value):
-    value_border = 8
-
     name_line = name + ':\n'
-    value_line = (' ' * value_border) + value + '\n'
+    value_line = value + '\n\n'
 
     return name_line + value_line
 
@@ -364,9 +362,9 @@ def write_entry_to_file(entry_name, entry_fields):
         with open(output_pathfile, 'w') as text_file:
             text_file.write(content)
 
-        print(" * {} *".format(colours_write_ok + 'written to file' + colour_reset))
+        print(" * {} *\n".format(colours_write_ok + 'written to file' + colour_reset))
     else:
-        print(" ! {} !".format(colours_write_fail + 'could not write (file already exists)' + colour_reset))
+        print(" ! {} !\n".format(colours_write_fail + 'could not write (file already exists)' + colour_reset))
 
     return
 
@@ -496,8 +494,8 @@ def main(argv):
             content = generate_single_entry_screen(entry_name, entry_fields)
 
             reset_display()
-            print(content)
-            print()
+            print(content + '\n')
+            #print()
 
             prompt_only = False
 
@@ -509,7 +507,6 @@ def main(argv):
                     break
                 elif fields_menu_index == -1:
                     write_entry_to_file(entry_name, entry_fields)
-                    print()
                     prompt_only = True
                 elif fields_menu_index == -4:
                     menu_stack = []
