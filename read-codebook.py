@@ -21,7 +21,7 @@ import getopt
 import sqlite3 as lite
 
 script_file = 'read-codebook.py'
-script_date = '2016-08-15'
+script_date = '2016-08-16'
 
 # text colours
 colour_white_fg = '\033[97m'
@@ -59,7 +59,7 @@ colours_write_fail = colour_red_fg + colour_bold
 
 prebox_space = 1        # space before left border
 
-def draw_menu(title, table, column, options, prompt_only):
+def draw_menu(title, table, column, options, prompt_only = False):
     global box_width
 
     box_width = len(script_file) + len(script_date) + 5
@@ -420,7 +420,7 @@ def main(argv):
     while True:
         if current_menu == 'categories':
             reset_display()
-            category_menu_index = draw_menu('categories', all_categories, 'category_name', 'SF', False)
+            category_menu_index = draw_menu('categories', all_categories, 'category_name', 'SF')
             menu_stack.append(current_menu)
 
             if category_menu_index == -2:
@@ -434,7 +434,7 @@ def main(argv):
             category_row = all_categories[int(category_menu_index) - 1]
             category_entries = get_db_entries_from_category(category_row['category_id'])
             reset_display()
-            entry_menu_index = draw_menu(category_row['category_name'], category_entries, 'entry_name', 'SBFM', False)
+            entry_menu_index = draw_menu(category_row['category_name'], category_entries, 'entry_name', 'SBFM')
 
             if entry_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -462,7 +462,7 @@ def main(argv):
         if current_menu == 'search results':
             search_entries = get_db_search(search_text)
             reset_display()
-            search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'entry_name', 'BM', False)
+            search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'entry_name', 'BM')
 
             if search_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -477,7 +477,7 @@ def main(argv):
         if current_menu == 'favorites':
             favorites_entries = get_db_favorites()
             reset_display()
-            favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BM', False)
+            favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BM')
 
             if favorite_menu_index == 0:
                 current_menu = menu_stack.pop()
