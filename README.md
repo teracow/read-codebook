@@ -18,6 +18,15 @@ This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shel
 5. When you're done, quit the reader and delete the plaintext database file.
 
 ---
+###**Screenshots:**
+
+![menu](images/screenshot-1.png)
+
+![menu](images/screenshot-2.png)
+
+![menu](images/screenshot-3.png)
+
+---
 ###**Notes:**
 
 As this compromises the security of the original database, it is recommended that this only be done in a secure environment (i.e. don't run this on Windows) and only if you understand why. I do not take any responsibilty for the integrity and security of your data. 
@@ -55,5 +64,4 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-15) - None.
-  
+- (2016-08-17) - None.
