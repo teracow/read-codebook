@@ -55,13 +55,14 @@ colours_prompt = colour_light_fg + colour_bold
 colours_write_ok = colour_green_fg + colour_bold
 colours_write_fail = colour_red_fg + colour_bold
 
-box_indent = 2                  # from left of screen to left of box
-box_outdent = box_indent        # from right of box to right of screen
+box_position = 'center'         # 'left', 'center' or 'right' of screen
+box_indent = 1                  # space from side of screen to box
 box_title_indent = 4            # chars from left border to start of title bookend
 title_spacing = 1               # space between bookends and title on left and right
 menu_item_indent = 1            # space between the left border and the index parentheses
 menu_item_gap = 1               # space between index parentheses and the displayed item
-prompt_indent = 3               # from left of screen to start of prompt
+menu_item_tail = 1              # space between item and right border
+prompt_indent = 1               # from left of box to start of prompt
 entry_name_indent = 1           # from left of box to name
 entry_value_indent = 4          # from left of box to value
 
@@ -69,13 +70,14 @@ entry_value_indent = 4          # from left of box to value
 box_title_chars_length = 4      # characters needed to form title row
 box_vertical_chars_length = 2   # characters needed to form vertical sides of box
 box_footer_chars_length = 2     # characters needed to form footer
+box_left = 0                    # calculated later on depending on box_position
+box_with = 0                    # calculated later on depending on widest item in display
+row_min_length = menu_item_indent + 2 + menu_item_gap + menu_item_tail + 2      # 2 x parentheses and 2 x box chars
 
 script_details = '{} ({})'.format(colour_light_fg + colour_bold + script_file + colour_reset, script_date)
 
 def draw_menu(title, table, column, options, prompt_only = False):
-    global box_width
-
-    box_width = len(script_file) + len(script_date) + 5
+    #box_width = len(script_file) + len(script_date) + 5
     # Set a minimum menu box size - this is the overall width including box chars.
     # Note! menu option messages such as 'Write to text file' are not length tested!
     # This must be allowed for when adjusting this figure.
@@ -145,40 +147,69 @@ def draw_menu(title, table, column, options, prompt_only = False):
 
     return user_selection
 
-def generate_menu_lines(title, records, record_index):
-    global box_width, row_trailing_space, row_min_length
+def calc_box_width(records, record_index):
+    global box_width
 
-    index = 0
-    row_trailing_space = 1  # space between item and right border
-    row_min_length = menu_item_indent + 2 + menu_item_gap + row_trailing_space + 2      # 2 x parentheses and 2 x box chars
-    title_extra_spaces = title_spacing * 2
-    title_min_length = len(title) + box_title_chars_length + title_extra_spaces + box_title_indent
+    box_width = 31         # this is the minimum box width
 
-    # find longest display item so box width can be recalculated
     for index, record in enumerate(records):
         item_width = calc_line_item_width(index, record[record_index])
         if (item_width + row_min_length) > box_width: box_width = item_width + row_min_length
 
+    return
+
+def calc_box_left():
+    global box_left
+
+    if box_position == 'left':
+        box_left = box_indent
+    elif box_position == 'center':
+        rows, columns = get_screen_size()
+        box_left = (columns // 2) - (box_width // 2)
+    else:
+        rows, columns = get_screen_size()
+        box_left = columns - box_indent - box_width
+
+    return
+
+def generate_menu_lines(title, records, record_index):
+    global box_width
+
+    index = 0
+    row_min_length = menu_item_indent + 2 + menu_item_gap + menu_item_tail + 2      # 2 x parentheses and 2 x box chars
+    title_extra_spaces = title_spacing * 2
+    title_min_length = len(title) + box_title_chars_length + title_extra_spaces + box_title_indent
+    calc_box_width(records, record_index)
+    calc_box_left()
+
     if title_min_length > box_width: box_width = title_min_length
 
     if title:
-        menu_header = (' ' * box_indent) + colours_menu_box + '┌' + ('─' * box_title_indent) + '┤' + (' ' * title_spacing) + colours_menu_title + title + colour_reset + colours_menu_box + (' ' * title_spacing) + '├' + '─' * (box_width - title_min_length) + '┐' + colour_reset
-        menu_separator = (' ' * box_indent) + colours_menu_box + '├' + ('─' * (box_width - 2)) + '┤' + colour_reset
-        menu_footer = (' ' * box_indent) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
+        #menu_header = (' ' * (columns - (len(script_file) + len(script_date) + 5))) + ' ' + script_details + '\n\n'
+        distance1 = ((len(script_file) + len(script_date) + 3) // 2)
+        distance2 = box_width // 2
+        distance3 = distance2 - distance1
+        distance4 = box_left + distance3
+        menu_header = (' ' * distance4) + script_details + '\n\n'
+
+        menu_header += (' ' * box_left) + colours_menu_box + '┌' + ('─' * box_title_indent) + '┤' + (' ' * title_spacing) + colours_menu_title + title + colour_reset + colours_menu_box + (' ' * title_spacing) + '├' + '─' * (box_width - title_min_length) + '┐' + colour_reset
+
+        menu_separator = (' ' * box_left) + colours_menu_box + '├' + ('─' * (box_width - 2)) + '┤' + colour_reset
+        menu_footer = (' ' * box_left) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
     else:
-        menu_header = (' ' * box_indent) + colours_menu_box + '┌' + ('─' * (box_width - 2)) + '┐' + colour_reset
+        menu_header = (' ' * box_left) + colours_menu_box + '┌' + ('─' * (box_width - 2)) + '┐' + colour_reset
         menu_separator = ''
-        menu_footer = (' ' * box_indent) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
+        menu_footer = (' ' * box_left) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
 
     return menu_header, menu_separator, menu_footer
 
 def generate_menu_line_item(index, text):
 
-    return (' ' * box_indent) + colours_menu_box + '│' + (' ' * menu_item_indent) + '(' + allowed_item_key(str(index)) + colour_reset + colours_menu_box + ')' + (' ' * menu_item_gap) + colours_menu_item + text + (' ' * (box_width - calc_line_item_width(index, text) - row_min_length)) + (' ' * row_trailing_space) + colour_reset + colours_menu_box + '│' + colour_reset
+    return (' ' * box_left) + colours_menu_box + '│' + (' ' * menu_item_indent) + '(' + allowed_item_key(str(index)) + colour_reset + colours_menu_box + ')' + (' ' * menu_item_gap) + colours_menu_item + text + (' ' * (box_width - calc_line_item_width(index, text) - row_min_length)) + (' ' * menu_item_tail) + colour_reset + colours_menu_box + '│' + colour_reset
 
 def generate_menu_line_option(char, text):
 
-    return (' ' * box_indent) + colours_menu_box + '│' + (' ' * menu_item_indent) + '(' + allowed_option_key(char) + colour_reset + colours_menu_box + ')' + (' ' * menu_item_gap) + text + (' ' * (box_width - calc_line_item_width(char, text) - row_min_length)) + (' ' * row_trailing_space) + '│' + colour_reset
+    return (' ' * box_left) + colours_menu_box + '│' + (' ' * menu_item_indent) + '(' + allowed_option_key(char) + colour_reset + colours_menu_box + ')' + (' ' * menu_item_gap) + text + (' ' * (box_width - calc_line_item_width(char, text) - row_min_length)) + (' ' * menu_item_tail) + '│' + colour_reset
 
 def calc_line_item_width(index, text):
 
@@ -186,11 +217,11 @@ def calc_line_item_width(index, text):
 
 def generate_menu_prompt():
 
-    return (' ' * prompt_indent) + colours_prompt + 'select:' + colour_reset + ' '
+    return (' ' * (box_left + prompt_indent)) + colours_prompt + 'select:' + colour_reset + ' '
 
 def generate_search_prompt():
 
-    return (' ' * prompt_indent) + colours_prompt + 'enter text to search for: ' + colour_reset + ' '
+    return (' ' * (box_left + prompt_indent)) + colours_prompt + 'enter text to search for: ' + colour_reset + ' '
 
 def allowed_item_key(text):
 
@@ -206,8 +237,10 @@ def get_screen_size():
     return int(rows_str), int(columns_str)
 
 def reset_display():
+    #rows, columns = get_screen_size()
+
+    #print('\033c' + (' ' * (columns - (len(script_file) + len(script_date) + 5))) + ' ' + script_details + '\n')
     print('\033c')
-    print((' ' * box_indent) + ' ' + script_details + '\n')
 
     return
 
@@ -297,9 +330,9 @@ def generate_single_entry_screen(title, entry_fields):
     rows, columns = get_screen_size()
     title_extra_spaces = title_spacing * 2
     title_min_length = len(title) + box_title_chars_length + title_extra_spaces + box_title_indent
-    header = (' ' * box_indent) + colours_single_entry_box + '╔' + ('═' * box_title_indent) + '╣' + (' ' * title_spacing) + colours_single_entry_title + title + colour_reset + colours_single_entry_box + (' ' * title_spacing) + '╠' + '═' * (columns - box_indent - title_min_length - box_outdent) + '╗' + colour_reset + '\n'
+    header = (' ' * box_indent) + colours_single_entry_box + '╔' + ('═' * box_title_indent) + '╣' + (' ' * title_spacing) + colours_single_entry_title + title + colour_reset + colours_single_entry_box + (' ' * title_spacing) + '╠' + '═' * (columns - box_indent - title_min_length - box_indent) + '╗' + colour_reset + '\n'
     content = ''
-    footer = (' ' * box_indent) + colours_single_entry_box + '╚' + ('═' * (columns - box_footer_chars_length - box_indent - box_outdent)) + '╝' + colour_reset
+    footer = (' ' * box_indent) + colours_single_entry_box + '╚' + ('═' * (columns - box_footer_chars_length - box_indent - box_indent)) + '╝' + colour_reset
 
     for field in entry_fields:
         if field['data_type'] == 'note' or field['entry_type'] == 1:
@@ -324,12 +357,12 @@ def generate_single_entry_file(entry_fields):
 def generate_note_screen(name, value, columns):
     title = name + ':'
     name_min_length = len(title) + box_vertical_chars_length + entry_name_indent
-    name_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_name_indent) + colours_single_entry_name + title + (' ' * (columns - box_indent - name_min_length - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
+    name_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_name_indent) + colours_single_entry_name + title + (' ' * (columns - box_indent - name_min_length - box_indent)) + colours_single_entry_box + '║' + colour_reset + '\n'
     value_line = ''
 
     for line in value.splitlines():
         line_min_length = len(line) + box_vertical_chars_length + entry_value_indent
-        value_line += (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_value_indent) + colours_single_entry_value + line + (' ' * (columns - box_indent - line_min_length - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
+        value_line += (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_value_indent) + colours_single_entry_value + line + (' ' * (columns - box_indent - line_min_length - box_indent)) + colours_single_entry_box + '║' + colour_reset + '\n'
 
     return name_line + value_line
 
@@ -337,8 +370,8 @@ def generate_field_screen(name, value, columns):
     title = name + ':'
     name_min_length = len(title) + box_vertical_chars_length + entry_name_indent
     value_min_length = len(value) + box_vertical_chars_length + entry_value_indent
-    name_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_name_indent) + colours_single_entry_name + title + (' ' * (columns - box_indent - name_min_length - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
-    value_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_value_indent) + colours_single_entry_value + value + (' ' * (columns - box_indent - value_min_length - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
+    name_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_name_indent) + colours_single_entry_name + title + (' ' * (columns - box_indent - name_min_length - box_indent)) + colours_single_entry_box + '║' + colour_reset + '\n'
+    value_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_value_indent) + colours_single_entry_value + value + (' ' * (columns - box_indent - value_min_length - box_indent)) + colours_single_entry_box + '║' + colour_reset + '\n'
 
     return name_line + value_line
 
@@ -357,9 +390,9 @@ def write_entry_to_file(entry_name, entry_fields):
         with open(output_pathfile, 'w') as text_file:
             text_file.write(content)
 
-        print((' ' * prompt_indent) + "* {} *\n".format(colours_write_ok + 'written to file' + colour_reset))
+        print((' ' * (box_left + prompt_indent)) + "* {} *\n".format(colours_write_ok + 'written to file' + colour_reset))
     else:
-        print((' ' * prompt_indent) + "! {} !\n".format(colours_write_fail + 'did not write (file already exists)' + colour_reset))
+        print((' ' * (box_left + prompt_indent)) + "! {} !\n".format(colours_write_fail + 'did not write (file already exists)' + colour_reset))
 
     return
 
