@@ -304,7 +304,8 @@ def get_db_entries_from_category(category_id):
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE category_id = ? ORDER BY entry_name', (category_id,))
+        cur.execute(base_sql + 'WHERE category_id = ? ORDER BY entry_name COLLATE NOCASE',
+					(category_id,))
 
     return cur.fetchall()
 
@@ -342,7 +343,8 @@ def get_db_search(text):
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE value LIKE ?', ('%' + text + '%',))
+        cur.execute(base_sql + 'WHERE value LIKE ? ORDER BY entry_name COLLATE NOCASE',
+					('%' + text + '%',))
 
     return cur.fetchall()
 
@@ -357,7 +359,7 @@ def get_db_favorites():
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE favorite = 1 ORDER BY entry_name')
+        cur.execute(base_sql + 'WHERE favorite = 1 ORDER BY entry_name COLLATE NOCASE')
 
     return cur.fetchall()
 
