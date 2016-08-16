@@ -171,9 +171,8 @@ def generate_menu_lines(title, records, record_index):
     global box_width
 
     index = 0
-    row_min_length = menu_item_indent + 2 + menu_item_gap + menu_item_tail + 2      # 2 x parentheses and 2 x box chars
-    title_extra_spaces = title_spacing * 2
-    title_min_length = len(title) + box_title_chars_length + title_extra_spaces + box_title_indent
+    row_min_length = menu_item_indent + 2 + menu_item_gap + menu_item_tail + box_vertical_chars_length      # 2 x parentheses
+    title_min_length = len(title) + box_title_chars_length + (title_spacing * 2) + box_title_indent
     calc_box_width(records, record_index)
     calc_box_left()
 
@@ -182,12 +181,12 @@ def generate_menu_lines(title, records, record_index):
     if title:
         menu_header = (' ' * (box_left + ((box_width // 2) - ((len(script_file) + len(script_date) + 3) // 2)))) + script_details + '\n\n'
         menu_header += (' ' * box_left) + colours_menu_box + '┌' + ('─' * box_title_indent) + '┤' + (' ' * title_spacing) + colours_menu_title + title + colour_reset + colours_menu_box + (' ' * title_spacing) + '├' + '─' * (box_width - title_min_length) + '┐' + colour_reset
-        menu_separator = (' ' * box_left) + colours_menu_box + '├' + ('─' * (box_width - 2)) + '┤' + colour_reset
-        menu_footer = (' ' * box_left) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
+        menu_separator = (' ' * box_left) + colours_menu_box + '├' + ('─' * (box_width - box_vertical_chars_length)) + '┤' + colour_reset
+        menu_footer = (' ' * box_left) + colours_menu_box + '└' + ('─' * (box_width - box_vertical_chars_length)) + '┘' + colour_reset
     else:
-        menu_header = (' ' * box_left) + colours_menu_box + '┌' + ('─' * (box_width - 2)) + '┐' + colour_reset
+        menu_header = (' ' * box_left) + colours_menu_box + '┌' + ('─' * (box_width - box_vertical_chars_length)) + '┐' + colour_reset
         menu_separator = ''
-        menu_footer = (' ' * box_left) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
+        menu_footer = (' ' * box_left) + colours_menu_box + '└' + ('─' * (box_width - box_vertical_chars_length)) + '┘' + colour_reset
 
     return menu_header, menu_separator, menu_footer
 
@@ -313,8 +312,7 @@ def get_db_favorites():
 
 def generate_single_entry_screen(title, entry_fields):
     rows, columns = get_screen_size()
-    title_extra_spaces = title_spacing * 2
-    title_min_length = len(title) + box_title_chars_length + title_extra_spaces + box_title_indent
+    title_min_length = len(title) + box_title_chars_length + (title_spacing * 2) + box_title_indent
     header = (' ' * box_indent) + colours_single_entry_box + '╔' + ('═' * box_title_indent) + '╣' + (' ' * title_spacing) + colours_single_entry_title + title + colour_reset + colours_single_entry_box + (' ' * title_spacing) + '╠' + '═' * (columns - box_indent - title_min_length - box_indent) + '╗' + colour_reset + '\n'
     content = ''
     footer = (' ' * box_indent) + colours_single_entry_box + '╚' + ('═' * (columns - box_footer_chars_length - box_indent - box_indent)) + '╝' + colour_reset
