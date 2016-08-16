@@ -193,25 +193,19 @@ def generate_menu_lines(title, function = False):
         menu_header = (' ' * (box_left
                         + ((box_width // 2) - ((len(SCRIPT_FILE) + len(SCRIPT_DATE) + 3) // 2))))\
                         + SCRIPT_DETAILS + '\n\n'
-
-        menu_header += (' ' * box_left) + colours_menu_box + '┌' + ('─' * BOX_TITLE_INDENT)\
+        menu_header += (' ' * box_left) + colours_menu_box + '◤' + ('─' * BOX_TITLE_INDENT)\
                         + '┤' + (' ' * TITLE_SPACING) + title_colour + title + COLOUR_RESET\
                         + colours_menu_box + (' ' * TITLE_SPACING) + '├'\
                         + ('─' * (box_width - title_length)) + '┐' + COLOUR_RESET
-
         menu_separator = (' ' * box_left) + colours_menu_box + '├'\
                         + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┤' + COLOUR_RESET
-
-        menu_footer = (' ' * box_left) + colours_menu_box + '└'\
-                        + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┘' + COLOUR_RESET
     else:
-        menu_header = (' ' * box_left) + colours_menu_box + '┌'\
+        menu_header = (' ' * box_left) + colours_menu_box + '◤'\
                         + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┐' + COLOUR_RESET
-
         menu_separator = ''
 
-        menu_footer = (' ' * box_left) + colours_menu_box + '└'\
-                        + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┘' + COLOUR_RESET
+    menu_footer = (' ' * box_left) + colours_menu_box + '└'\
+                        + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '◢' + COLOUR_RESET
 
     return menu_header, menu_separator, menu_footer
 
@@ -353,14 +347,13 @@ def generate_single_entry_screen(title, entry_fields):
     rows, columns = get_screen_size()
     title_min_length = len(title) + BOX_TITLE_CHARS_LENGTH + (TITLE_SPACING * 2) + BOX_TITLE_INDENT
 
-    header = (' ' * BOX_INDENT) + colours_single_entry_box + '╔' + ('═' * BOX_TITLE_INDENT) + '╡'\
+    header = (' ' * BOX_INDENT) + colours_single_entry_box + '◤' + ('═' * BOX_TITLE_INDENT) + '╡'\
                 + (' ' * TITLE_SPACING) + colours_single_entry_title + title + COLOUR_RESET\
                 + colours_single_entry_box + (' ' * TITLE_SPACING) + '╞' + '═' * (columns\
                 - BOX_INDENT - title_min_length - BOX_INDENT) + '╗' + COLOUR_RESET + '\n'
     content = ''
-
     footer = (' ' * BOX_INDENT) + colours_single_entry_box + '╚'\
-                + ('═' * (columns - BOX_FOOTER_CHARS_LENGTH - BOX_INDENT - BOX_INDENT)) + '╝'\
+                + ('═' * (columns - BOX_FOOTER_CHARS_LENGTH - BOX_INDENT - BOX_INDENT)) + '◢'\
                 + COLOUR_RESET
 
     for field in entry_fields:
