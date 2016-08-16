@@ -41,7 +41,8 @@ colour_reset = '\033[0m'
 
 # colour scheme
 colours_menu_box = colour_light_fg + colour_dark_grey_bg
-colours_menu_title = colour_orange_fg + colour_bold + colour_dark_grey_bg
+colours_menu_title_item = colour_orange_fg + colour_bold + colour_dark_grey_bg
+colours_menu_title_function = colour_yellow_fg + colour_bold + colour_dark_grey_bg
 colours_menu_item = colour_light_fg + colour_dark_grey_bg
 
 colours_single_entry_box = colour_grey_fg + colour_dark_grey_bg
@@ -76,10 +77,13 @@ row_min_length = menu_item_indent + 2 + menu_item_gap + menu_item_tail + 2      
 
 script_details = '{} ({})'.format(colour_light_fg + colour_bold + script_file + colour_reset, script_date)
 
-def draw_menu(title, table, column, options, prompt_only = False):
+def draw_menu(title, table, column, options, prompt_only = False, function = False):
+    # function = False   : menu title will be shown in colour = colours_menu_title_item
+    # function = True    : menu title will be shown in colour = colours_menu_title_function
+
     display_menu = True
     total = len(table)
-    header, separator, footer = generate_menu_lines(title, table, column)
+    header, separator, footer = generate_menu_lines(title, table, column, function)
     if prompt_only: display_menu = False
 
     while True:
@@ -167,7 +171,7 @@ def calc_box_left():
 
     return
 
-def generate_menu_lines(title, records, record_index):
+def generate_menu_lines(title, records, record_index, function = False):
     global box_width
 
     index = 0
@@ -176,11 +180,16 @@ def generate_menu_lines(title, records, record_index):
     calc_box_width(records, record_index)
     calc_box_left()
 
+    if function == True:
+        title_colour = colours_menu_title_function
+    else:
+        title_colour = colours_menu_title_item
+
     if title_min_length > box_width: box_width = title_min_length
 
     if title:
         menu_header = (' ' * (box_left + ((box_width // 2) - ((len(script_file) + len(script_date) + 3) // 2)))) + script_details + '\n\n'
-        menu_header += (' ' * box_left) + colours_menu_box + '┌' + ('─' * box_title_indent) + '┤' + (' ' * title_spacing) + colours_menu_title + title + colour_reset + colours_menu_box + (' ' * title_spacing) + '├' + '─' * (box_width - title_min_length) + '┐' + colour_reset
+        menu_header += (' ' * box_left) + colours_menu_box + '┌' + ('─' * box_title_indent) + '┤' + (' ' * title_spacing) + title_colour + title + colour_reset + colours_menu_box + (' ' * title_spacing) + '├' + '─' * (box_width - title_min_length) + '┐' + colour_reset
         menu_separator = (' ' * box_left) + colours_menu_box + '├' + ('─' * (box_width - box_vertical_chars_length)) + '┤' + colour_reset
         menu_footer = (' ' * box_left) + colours_menu_box + '└' + ('─' * (box_width - box_vertical_chars_length)) + '┘' + colour_reset
     else:
@@ -266,7 +275,7 @@ def get_db_fields_from_entry(entry_id):
                         entries.is_favorite AS favorite,\
                         types.name          AS field_name,\
                         fields.value,\
-						fields.idx			AS field_index,\
+                        fields.idx          AS field_index,\
                         types.mode          AS data_type\
                 FROM entries\
                         JOIN fields         ON fields.entry_id = entries.id\
@@ -472,7 +481,7 @@ def main(argv):
         if current_menu == 'search results':
             search_entries = get_db_search(search_text)
             reset_display()
-            search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'entry_name', 'BM')
+            search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'entry_name', 'BM', None, True)
 
             if search_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -487,7 +496,7 @@ def main(argv):
         if current_menu == 'favorites':
             favorites_entries = get_db_favorites()
             reset_display()
-            favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BM')
+            favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BM', None, True)
 
             if favorite_menu_index == 0:
                 current_menu = menu_stack.pop()
