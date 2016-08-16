@@ -297,7 +297,8 @@ def get_db_entries_from_category(category_id):
                         categories.name     AS category_name,\
                         entries.id          AS entry_id,\
                         entries.name        AS entry_name,\
-                        entries.type        AS entry_type\
+                        entries.type        AS entry_type,\
+                        entries.is_favorite AS favorite\
                 FROM categories\
                         JOIN entries        ON entries.category_id = categories.id '
 
@@ -305,7 +306,7 @@ def get_db_entries_from_category(category_id):
         con.row_factory = lite.Row
         cur = con.cursor()
         cur.execute(base_sql + 'WHERE category_id = ? ORDER BY entry_name COLLATE NOCASE',
-					(category_id,))
+                    (category_id,))
 
     return cur.fetchall()
 
@@ -314,7 +315,6 @@ def get_db_fields_from_entry(entry_id):
     base_sql = 'SELECT  entry_id,\
                         entries.name        AS entry_name,\
                         entries.type        AS entry_type,\
-                        entries.is_favorite AS favorite,\
                         types.name          AS field_name,\
                         fields.value,\
                         fields.idx          AS field_index,\
@@ -344,7 +344,7 @@ def get_db_search(text):
         con.row_factory = lite.Row
         cur = con.cursor()
         cur.execute(base_sql + 'WHERE value LIKE ? ORDER BY entry_name COLLATE NOCASE',
-					('%' + text + '%',))
+                    ('%' + text + '%',))
 
     return cur.fetchall()
 
@@ -363,8 +363,11 @@ def get_db_favorites():
 
     return cur.fetchall()
 
-def generate_single_entry_screen(title, entry_fields):
+def generate_single_entry_screen(title, entry_fields, favorite = False):
     rows, columns = get_screen_size()
+
+    if favorite: title = '★ ' + title + ' ★'
+
     title_length = calc_title_length(title)
 
     if BOX_POSITION == 'center':
@@ -586,10 +589,9 @@ def main(argv):
                 current_menu = 'fields'
 
         if current_menu == 'fields':
-            entry_id = entry_row['entry_id']
-            entry_name = entry_row['entry_name']
-            entry_fields = get_db_fields_from_entry(entry_id)
-            content = generate_single_entry_screen(entry_name, entry_fields)
+            content = generate_single_entry_screen(entry_row['entry_name'],
+                        get_db_fields_from_entry(entry_row['entry_id']),
+                        entry_row['favorite'])
 
             reset_display()
             print(content + '\n')
