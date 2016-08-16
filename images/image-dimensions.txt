@@ -1,0 +1,4 @@
+930 x 210
+800 x 500
+
+then resize to 800 wide only
