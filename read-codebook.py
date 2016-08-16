@@ -73,29 +73,34 @@ PROMPT_INDENT = 1               # from left of box to start of prompt
 ENTRY_NAME_INDENT = 1           # from left of box to name
 ENTRY_VALUE_INDENT = 4          # from left of box to value
 
-# initial values
-box_left = 0                    # calculated later on depending on BOX_POSITION
-box_with = 0                    # calculated later on depending on widest item in display
-
 # these are only used for calculation
 BOX_TITLE_CHARS_LENGTH = 4      # characters needed to form title row
 BOX_VERTICAL_CHARS_LENGTH = 2   # characters needed to form vertical sides of box
 BOX_FOOTER_CHARS_LENGTH = 2     # characters needed to form footer
 
-row_min_length = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + MENU_ITEM_TAIL + 2      # 2 x parentheses
-                                                                                # and 2 x box chars
+row_min_length = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + MENU_ITEM_TAIL + BOX_VERTICAL_CHARS_LENGTH
 
 SCRIPT_DETAILS = '{} ({})'.format(COLOUR_LIGHT_FG + COLOUR_BOLD + SCRIPT_FILE + COLOUR_RESET,
                                     SCRIPT_DATE)
 
 def draw_menu(title, table, column, options, prompt_only = False, function = False):
+    global box_width, box_left
     # function = False   : menu title will be shown in colour = colours_menu_title_item
     # function = True    : menu title will be shown in colour = colours_menu_title_function
 
-    display_menu = True
-    total = len(table)
-    header, separator, footer = generate_menu_lines(title, table, column, function)
-    if prompt_only: display_menu = False
+    total_items = len(table)
+
+    if prompt_only:
+        display_menu = False
+    else:
+        display_menu = True
+        box_width = 31      # minimum box width
+        column_width = widest_column_entry(table, column)
+        title_length = calc_title_length(title)
+        if (column_width + row_min_length) > box_width: box_width = column_width + row_min_length
+        if title_length > box_width: box_width = title_length
+        box_left = calc_box_left()
+        header, separator, footer = generate_menu_lines(title, function)
 
     while True:
         if display_menu:
@@ -104,7 +109,7 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
             for index, record in enumerate(table):
                 print(generate_menu_line_item(index + 1, record[column]))
 
-            if total > 0: print(separator)
+            if total_items > 0: print(separator)
             if 'S' in options: print(generate_menu_line_option('S', 'Search'))
             if 'W' in options: print(generate_menu_line_option('W', 'Write to text file'))
             if 'F' in options: print(generate_menu_line_option('F', 'Favorites'))
@@ -124,7 +129,7 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
 
         # allowed keys based on 'options'
         if user_selection.isdigit():
-            if int(user_selection) > 0 and int(user_selection) <= total: break
+            if int(user_selection) > 0 and int(user_selection) <= total_items: break
         else:
             if user_selection.upper() == 'Q': sys.exit()
 
@@ -157,14 +162,14 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
 
     return user_selection
 
-def calc_box_width(records, record_index):
-    width = 31		# minimum box width
+def widest_column_entry(entries, name):
+    current_width = 1
 
-    for index, record in enumerate(records):
-        item_width = calc_line_item_width(index, record[record_index])
-        if (item_width + row_min_length) > width: width = item_width + row_min_length
+    for index, entry in enumerate(entries):
+        item_width = calc_line_item_width(index, entry[name])
+        if item_width > current_width: current_width = item_width
 
-    return width
+    return current_width
 
 def calc_box_left():
     if BOX_POSITION == 'left':
@@ -176,23 +181,13 @@ def calc_box_left():
         rows, columns = get_screen_size()
         return columns - BOX_INDENT - box_width
 
-def generate_menu_lines(title, records, record_index, function = False):
-    global box_width, box_left
+def generate_menu_lines(title, function = False):
+    title_length = calc_title_length(title)
 
-    index = 0
-    row_min_length = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + MENU_ITEM_TAIL\
-                    + BOX_VERTICAL_CHARS_LENGTH
-
-    title_min_length = len(title) + BOX_TITLE_CHARS_LENGTH + (TITLE_SPACING * 2) + BOX_TITLE_INDENT
-    box_width = calc_box_width(records, record_index)
-    box_left = calc_box_left()
-
-    if function == True:
+    if function:
         title_colour = colours_menu_title_function
     else:
         title_colour = colours_menu_title_item
-
-    if title_min_length > box_width: box_width = title_min_length
 
     if title:
         menu_header = (' ' * (box_left
@@ -202,7 +197,7 @@ def generate_menu_lines(title, records, record_index, function = False):
         menu_header += (' ' * box_left) + colours_menu_box + '┌' + ('─' * BOX_TITLE_INDENT)\
                         + '┤' + (' ' * TITLE_SPACING) + title_colour + title + COLOUR_RESET\
                         + colours_menu_box + (' ' * TITLE_SPACING) + '├'\
-                        + ('─' * (box_width - title_min_length)) + '┐' + COLOUR_RESET
+                        + ('─' * (box_width - title_length)) + '┐' + COLOUR_RESET
 
         menu_separator = (' ' * box_left) + colours_menu_box + '├'\
                         + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┤' + COLOUR_RESET
@@ -239,6 +234,10 @@ def generate_menu_line_option(char, text):
 def calc_line_item_width(index, text):
 
     return len(str(index) + text)
+
+def calc_title_length(title):
+
+    return len(title) + BOX_TITLE_CHARS_LENGTH + (TITLE_SPACING * 2) + BOX_TITLE_INDENT
 
 def generate_menu_prompt():
 
@@ -385,10 +384,10 @@ def generate_single_entry_file(entry_fields):
     return content
 
 def generate_note_screen(name, value, columns):
-    title = name + ':'
-    name_min_length = len(title) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_NAME_INDENT
+    name += ':'
+    name_min_length = len(name) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_NAME_INDENT
     name_line = (' ' * BOX_INDENT) + colours_single_entry_box + '║' + (' ' * ENTRY_NAME_INDENT)\
-                + colours_single_entry_name + title\
+                + colours_single_entry_name + name\
                 + (' ' * (columns - BOX_INDENT - name_min_length - BOX_INDENT))\
                 + colours_single_entry_box + '║' + COLOUR_RESET + '\n'
     value_line = ''
@@ -404,12 +403,12 @@ def generate_note_screen(name, value, columns):
     return name_line + value_line
 
 def generate_field_screen(name, value, columns):
-    title = name + ':'
-    name_min_length = len(title) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_NAME_INDENT
+    name += ':'
+    name_min_length = len(name) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_NAME_INDENT
     value_min_length = len(value) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_VALUE_INDENT
 
     name_line = (' ' * BOX_INDENT) + colours_single_entry_box + '║' + (' ' * ENTRY_NAME_INDENT)\
-                + colours_single_entry_name + title + (' ' * (columns - BOX_INDENT\
+                + colours_single_entry_name + name + (' ' * (columns - BOX_INDENT\
                 - name_min_length - BOX_INDENT)) + colours_single_entry_box + '║' + COLOUR_RESET\
                 + '\n'
 
@@ -421,15 +420,12 @@ def generate_field_screen(name, value, columns):
     return name_line + value_line
 
 def generate_field_file(name, value):
-    name_line = name + ':\n'
-    value_line = value + '\n'
 
-    return name_line + value_line
+    return name + ':\n' + value + '\n'
 
 def write_entry_to_file(entry_name, entry_fields):
     output_pathfile = entry_name.replace(' ', '_').replace('/', '_').replace('\\', '_').\
-                        replace('?', '_')
-    output_pathfile += '.txt'
+                        replace('?', '_') + '.txt'
     content = generate_single_entry_file(entry_fields)
 
     if not os.path.exists(output_pathfile):
@@ -484,7 +480,6 @@ def main(argv):
     print(SCRIPT_DETAILS)
 
     result = check_opts(argv)
-
     if result > 0: return result
 
     all_categories = get_db_categories()
