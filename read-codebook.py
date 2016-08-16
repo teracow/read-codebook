@@ -77,11 +77,6 @@ row_min_length = menu_item_indent + 2 + menu_item_gap + menu_item_tail + 2      
 script_details = '{} ({})'.format(colour_light_fg + colour_bold + script_file + colour_reset, script_date)
 
 def draw_menu(title, table, column, options, prompt_only = False):
-    #box_width = len(script_file) + len(script_date) + 5
-    # Set a minimum menu box size - this is the overall width including box chars.
-    # Note! menu option messages such as 'Write to text file' are not length tested!
-    # This must be allowed for when adjusting this figure.
-
     display_menu = True
     total = len(table)
     header, separator, footer = generate_menu_lines(title, table, column)
@@ -185,15 +180,8 @@ def generate_menu_lines(title, records, record_index):
     if title_min_length > box_width: box_width = title_min_length
 
     if title:
-        #menu_header = (' ' * (columns - (len(script_file) + len(script_date) + 5))) + ' ' + script_details + '\n\n'
-        distance1 = ((len(script_file) + len(script_date) + 3) // 2)
-        distance2 = box_width // 2
-        distance3 = distance2 - distance1
-        distance4 = box_left + distance3
-        menu_header = (' ' * distance4) + script_details + '\n\n'
-
+        menu_header = (' ' * (box_left + ((box_width // 2) - ((len(script_file) + len(script_date) + 3) // 2)))) + script_details + '\n\n'
         menu_header += (' ' * box_left) + colours_menu_box + '┌' + ('─' * box_title_indent) + '┤' + (' ' * title_spacing) + colours_menu_title + title + colour_reset + colours_menu_box + (' ' * title_spacing) + '├' + '─' * (box_width - title_min_length) + '┐' + colour_reset
-
         menu_separator = (' ' * box_left) + colours_menu_box + '├' + ('─' * (box_width - 2)) + '┤' + colour_reset
         menu_footer = (' ' * box_left) + colours_menu_box + '└' + ('─' * (box_width - 2)) + '┘' + colour_reset
     else:
@@ -237,9 +225,6 @@ def get_screen_size():
     return int(rows_str), int(columns_str)
 
 def reset_display():
-    #rows, columns = get_screen_size()
-
-    #print('\033c' + (' ' * (columns - (len(script_file) + len(script_date) + 5))) + ' ' + script_details + '\n')
     print('\033c')
 
     return
@@ -543,4 +528,3 @@ def main(argv):
 if __name__ == '__main__':
     result = main(sys.argv[1:])
     exit(result)
-
