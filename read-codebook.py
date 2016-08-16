@@ -158,40 +158,34 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
     return user_selection
 
 def calc_box_width(records, record_index):
-    global box_width
-
-    box_width = 31              # minimum box width
+    width = 31		# minimum box width
 
     for index, record in enumerate(records):
         item_width = calc_line_item_width(index, record[record_index])
-        if (item_width + row_min_length) > box_width: box_width = item_width + row_min_length
+        if (item_width + row_min_length) > width: width = item_width + row_min_length
 
-    return
+    return width
 
 def calc_box_left():
-    global box_left
-
     if BOX_POSITION == 'left':
-        box_left = BOX_INDENT
+        return BOX_INDENT
     elif BOX_POSITION == 'center':
         rows, columns = get_screen_size()
-        box_left = (columns // 2) - (box_width // 2)
+        return (columns // 2) - (box_width // 2)
     else:
         rows, columns = get_screen_size()
-        box_left = columns - BOX_INDENT - box_width
-
-    return
+        return columns - BOX_INDENT - box_width
 
 def generate_menu_lines(title, records, record_index, function = False):
-    global box_width
+    global box_width, box_left
 
     index = 0
     row_min_length = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + MENU_ITEM_TAIL\
                     + BOX_VERTICAL_CHARS_LENGTH
 
     title_min_length = len(title) + BOX_TITLE_CHARS_LENGTH + (TITLE_SPACING * 2) + BOX_TITLE_INDENT
-    calc_box_width(records, record_index)
-    calc_box_left()
+    box_width = calc_box_width(records, record_index)
+    box_left = calc_box_left()
 
     if function == True:
         title_colour = colours_menu_title_function
