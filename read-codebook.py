@@ -58,20 +58,18 @@ colours_write_fail = colour_red_fg + colour_bold
 box_indent = 2                  # from left of screen to left of box
 box_outdent = box_indent        # from right of box to right of screen
 box_title_indent = 4            # chars from left border to start of title bookend
-box_title_chars_length = 4      # number of fixed characters needed to form title row
-
 title_spacing = 1               # space between bookends and title on left and right
-
 menu_item_indent = 1            # space between the left border and the index parentheses
 menu_item_gap = 1               # space between index parentheses and the displayed item
-
 prompt_indent = 3               # from left of screen to start of prompt
+entry_name_indent = 1           # from left of box to name
+entry_value_indent = 4          # from left of box to value
 
-entry_name_indent = 1           # indent from left of box to name
-entry_value_indent = 4          # indent from left of box to value
+# these are only used for calculation and should not be changed
+box_title_chars_length = 4      # characters needed to form title row
+box_vertical_chars_length = 2   # characters needed to form vertical sides of box
+box_footer_chars_length = 2     # characters needed to form footer
 
-# these should only be altered during re-design of screen
-vertical_box_char_length = 2    # number of fixed characters needed to form vertical sides of box
 script_details = '{} ({})'.format(colour_light_fg + colour_bold + script_file + colour_reset, script_date)
 
 def draw_menu(title, table, column, options, prompt_only = False):
@@ -153,7 +151,6 @@ def generate_menu_lines(title, records, record_index):
     index = 0
     row_trailing_space = 1  # space between item and right border
     row_min_length = menu_item_indent + 2 + menu_item_gap + row_trailing_space + 2      # 2 x parentheses and 2 x box chars
-
     title_extra_spaces = title_spacing * 2
     title_min_length = len(title) + box_title_chars_length + title_extra_spaces + box_title_indent
 
@@ -298,15 +295,11 @@ def get_db_favorites():
 
 def generate_single_entry_screen(title, entry_fields):
     rows, columns = get_screen_size()
-
     title_extra_spaces = title_spacing * 2
     title_min_length = len(title) + box_title_chars_length + title_extra_spaces + box_title_indent
-
-    footer_box_chars = 2    # number of fixed characters needed to form footer
-
     header = (' ' * box_indent) + colours_single_entry_box + '╔' + ('═' * box_title_indent) + '╣' + (' ' * title_spacing) + colours_single_entry_title + title + colour_reset + colours_single_entry_box + (' ' * title_spacing) + '╠' + '═' * (columns - box_indent - title_min_length - box_outdent) + '╗' + colour_reset + '\n'
     content = ''
-    footer = (' ' * box_indent) + colours_single_entry_box + '╚' + ('═' * (columns - footer_box_chars - box_indent - box_outdent)) + '╝' + colour_reset
+    footer = (' ' * box_indent) + colours_single_entry_box + '╚' + ('═' * (columns - box_footer_chars_length - box_indent - box_outdent)) + '╝' + colour_reset
 
     for field in entry_fields:
         if field['data_type'] == 'note' or field['entry_type'] == 1:
@@ -330,21 +323,20 @@ def generate_single_entry_file(entry_fields):
 
 def generate_note_screen(name, value, columns):
     title = name + ':'
-    name_min_length = len(title) + vertical_box_char_length + entry_name_indent
+    name_min_length = len(title) + box_vertical_chars_length + entry_name_indent
     name_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_name_indent) + colours_single_entry_name + title + (' ' * (columns - box_indent - name_min_length - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
-
     value_line = ''
 
     for line in value.splitlines():
-        value_line += (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_value_indent) + colours_single_entry_value + line + (' ' * (columns - box_indent - vertical_box_char_length - entry_value_indent - len(line) - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
+        line_min_length = len(line) + box_vertical_chars_length + entry_value_indent
+        value_line += (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_value_indent) + colours_single_entry_value + line + (' ' * (columns - box_indent - line_min_length - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
 
     return name_line + value_line
 
 def generate_field_screen(name, value, columns):
     title = name + ':'
-    name_min_length = len(title) + vertical_box_char_length + entry_name_indent
-    value_min_length = len(value) + vertical_box_char_length + entry_value_indent
-
+    name_min_length = len(title) + box_vertical_chars_length + entry_name_indent
+    value_min_length = len(value) + box_vertical_chars_length + entry_value_indent
     name_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_name_indent) + colours_single_entry_name + title + (' ' * (columns - box_indent - name_min_length - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
     value_line = (' ' * box_indent) + colours_single_entry_box + '║' + (' ' * entry_value_indent) + colours_single_entry_value + value + (' ' * (columns - box_indent - value_min_length - box_outdent)) + colours_single_entry_box + '║' + colour_reset + '\n'
 
