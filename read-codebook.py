@@ -266,6 +266,7 @@ def get_db_fields_from_entry(entry_id):
                         entries.is_favorite AS favorite,\
                         types.name          AS field_name,\
                         fields.value,\
+						fields.idx			AS field_index,\
                         types.mode          AS data_type\
                 FROM entries\
                         JOIN fields         ON fields.entry_id = entries.id\
@@ -274,7 +275,7 @@ def get_db_fields_from_entry(entry_id):
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE entry_id = ?', (entry_id,))
+        cur.execute(base_sql + 'WHERE entry_id = ? ORDER BY field_index', (entry_id,))
 
     return cur.fetchall()
 
