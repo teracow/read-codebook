@@ -27,7 +27,7 @@ import getopt
 import sqlite3 as lite
 
 SCRIPT_FILE = 'read-codebook.py'
-SCRIPT_DATE = '2016-08-17'
+SCRIPT_DATE = '2016-08-18'
 
 # text colours
 COLOUR_WHITE_FG = '\033[97m'
@@ -62,7 +62,9 @@ COLOURS_PROMPT = COLOUR_LIGHT_FG + COLOUR_BOLD
 COLOURS_WRITE_OK = COLOUR_GREEN_FG + COLOUR_BOLD
 COLOURS_WRITE_FAIL = COLOUR_RED_FG + COLOUR_BOLD
 
-BOX_POSITION = 'center'         # 'left', 'center' or 'right' of screen
+#BOX_POSITION = 'left'           # left of screen
+BOX_POSITION = 'center'         # center of screen
+#BOX_POSITION = 'right'          # right of screen
 BOX_INDENT = 1                  # space from side of screen to box
 BOX_TITLE_INDENT = 4            # chars from left border to start of title bookend
                                 #   this is ignored if BOX_POSITION is 'center'
@@ -79,15 +81,18 @@ BOX_TITLE_CHARS_LENGTH = 4      # left corner, title bookends, right corner
 BOX_VERTICAL_CHARS_LENGTH = 2   # upright lines
 BOX_FOOTER_CHARS_LENGTH = 2     # left corner, right corner
 
-ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + MENU_ITEM_TAIL + BOX_VERTICAL_CHARS_LENGTH
+MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + MENU_ITEM_TAIL\
+                    + BOX_VERTICAL_CHARS_LENGTH
 
 SCRIPT_DETAILS = '{} ({})'.format(COLOUR_LIGHT_FG + COLOUR_BOLD + SCRIPT_FILE + COLOUR_RESET,
                                     SCRIPT_DATE)
 
 def draw_menu(title, table, column, options, prompt_only = False, function = False):
+    # prompt_only = True    : don't show menu box and items, only show prompt line
+    # function = True    : menu title colour will be COLOURS_MENU_TITLE_FUNCTION
+    # function = False   : menu title colour will be COLOURS_MENU_TITLE_ITEM
+
     global box_width, box_left
-    # function = False   : menu title will be shown in colour = COLOURS_MENU_TITLE_ITEM
-    # function = True    : menu title will be shown in colour = COLOURS_MENU_TITLE_FUNCTION
 
     total_items = len(table)
 
@@ -98,7 +103,8 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
         box_width = 31      # minimum box width
         line_length = longest_column_entry(table, column)
         title_length = calc_title_length(title)
-        if (line_length + ROW_MIN_LENGTH) > box_width: box_width = line_length + ROW_MIN_LENGTH
+        if (line_length + MENU_ROW_MIN_LENGTH) > box_width: box_width = line_length\
+                                                                        + MENU_ROW_MIN_LENGTH
         if title_length > box_width: box_width = title_length
         box_left = calc_box_left()
         header, separator, footer = generate_menu_lines(title, function)
@@ -204,18 +210,18 @@ def generate_menu_lines(title, function = False):
 
 def generate_menu_line_item(index, text):
 
-    return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT) + '('\
-            + allowed_item_key(str(index)) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
+    return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
+            + '(' + allowed_item_key(str(index)) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
             + (' ' * MENU_ITEM_GAP) + COLOURS_MENU_ITEM + text\
-            + (' ' * (box_width - calc_line_item_width(index, text) - ROW_MIN_LENGTH))\
+            + (' ' * (box_width - calc_line_item_width(index, text) - MENU_ROW_MIN_LENGTH))\
             + (' ' * MENU_ITEM_TAIL) + COLOUR_RESET + COLOURS_MENU_BOX + '│' + COLOUR_RESET
 
 def generate_menu_line_option(char, text):
 
-    return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT) + '('\
-            + allowed_option_key(char) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
+    return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
+            + '(' + allowed_option_key(char) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
             + (' ' * MENU_ITEM_GAP) + text\
-            + (' ' * (box_width - calc_line_item_width(char, text) - ROW_MIN_LENGTH))\
+            + (' ' * (box_width - calc_line_item_width(char, text) - MENU_ROW_MIN_LENGTH))\
             + (' ' * MENU_ITEM_TAIL) + '│' + COLOUR_RESET
 
 def generate_menu_prompt():
@@ -228,13 +234,12 @@ def generate_search_prompt():
             + COLOUR_RESET + ' '
 
 def longest_column_entry(entries, name):
-    # checks the length of every row in column[name] and returns the longest
+    # checks the length of every row in column 'name' and returns the longest
 
     current_length = 1
 
     for index, entry in enumerate(entries):
         field_length = calc_line_item_width(index, entry[name])
-        #print('field_length: [{}]'.format(field_length))
         if field_length > current_length: current_length = field_length
 
     return current_length
@@ -253,12 +258,12 @@ def calc_title_length(title):
 def calc_box_left():
     if BOX_POSITION == 'left':
         return BOX_INDENT
-    elif BOX_POSITION == 'center':
-        rows, columns = get_screen_size()
-        return (columns // 2) - (box_width // 2)
-    else:
+    elif BOX_POSITION == 'right':
         rows, columns = get_screen_size()
         return columns - BOX_INDENT - box_width
+    else:
+        rows, columns = get_screen_size()
+        return (columns // 2) - (box_width // 2)
 
 def allowed_item_key(text):
 
@@ -376,9 +381,6 @@ def generate_single_entry_screen(title, entry_fields, favorite = False):
                     + COLOUR_RESET + '\n'
 
     content = ''
-    footer = (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '╚'\
-                + ('═' * (columns - BOX_FOOTER_CHARS_LENGTH - BOX_INDENT - BOX_INDENT)) + '◢'\
-                + COLOUR_RESET
 
     for field in entry_fields:
         if field['data_type'] == 'note' or field['entry_type'] == 1:
@@ -386,6 +388,10 @@ def generate_single_entry_screen(title, entry_fields, favorite = False):
             break
         else:
             content += generate_field_screen(field['field_name'], field['value'], columns)
+
+    footer = (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '╚'\
+                + ('═' * (columns - BOX_FOOTER_CHARS_LENGTH - BOX_INDENT - BOX_INDENT)) + '◢'\
+                + COLOUR_RESET
 
     return header + content + footer
 
@@ -407,6 +413,7 @@ def generate_note_screen(name, value, columns):
                 + COLOURS_SINGLE_ENTRY_NAME + name\
                 + (' ' * (columns - BOX_INDENT - name_min_length - BOX_INDENT))\
                 + COLOURS_SINGLE_ENTRY_BOX + '║' + COLOUR_RESET + '\n'
+
     value_line = ''
 
     for line in value.splitlines():
