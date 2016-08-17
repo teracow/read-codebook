@@ -75,9 +75,9 @@ ENTRY_NAME_INDENT = 1           # from left of box to name
 ENTRY_VALUE_INDENT = 4          # from left of box to value
 
 # these are only used for calculation
-BOX_TITLE_CHARS_LENGTH = 4      # characters needed to form title row
-BOX_VERTICAL_CHARS_LENGTH = 2   # characters needed to form vertical sides of box
-BOX_FOOTER_CHARS_LENGTH = 2     # characters needed to form footer
+BOX_TITLE_CHARS_LENGTH = 4      # left corner, title bookends, right corner
+BOX_VERTICAL_CHARS_LENGTH = 2   # upright lines
+BOX_FOOTER_CHARS_LENGTH = 2     # left corner, right corner
 
 ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + MENU_ITEM_TAIL + BOX_VERTICAL_CHARS_LENGTH
 
@@ -163,28 +163,6 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
 
     return user_selection
 
-def longest_column_entry(entries, name):
-    # checks the length of every row in column[name] and returns the longest
-
-    current_length = 1
-
-    for index, entry in enumerate(entries):
-        field_length = calc_line_item_width(index, entry[name])
-        #print('field_length: [{}]'.format(field_length))
-        if field_length > current_length: current_length = field_length
-
-    return current_length
-
-def calc_box_left():
-    if BOX_POSITION == 'left':
-        return BOX_INDENT
-    elif BOX_POSITION == 'center':
-        rows, columns = get_screen_size()
-        return (columns // 2) - (box_width // 2)
-    else:
-        rows, columns = get_screen_size()
-        return columns - BOX_INDENT - box_width
-
 def generate_menu_lines(title, function = False):
     title_length = calc_title_length(title)
 
@@ -240,6 +218,27 @@ def generate_menu_line_option(char, text):
             + (' ' * (box_width - calc_line_item_width(char, text) - ROW_MIN_LENGTH))\
             + (' ' * MENU_ITEM_TAIL) + '│' + COLOUR_RESET
 
+def generate_menu_prompt():
+
+    return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'select:' + COLOUR_RESET + ' '
+
+def generate_search_prompt():
+
+    return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'enter text to search for: '\
+            + COLOUR_RESET + ' '
+
+def longest_column_entry(entries, name):
+    # checks the length of every row in column[name] and returns the longest
+
+    current_length = 1
+
+    for index, entry in enumerate(entries):
+        field_length = calc_line_item_width(index, entry[name])
+        #print('field_length: [{}]'.format(field_length))
+        if field_length > current_length: current_length = field_length
+
+    return current_length
+
 def calc_line_item_width(index, text):
 
     return len(str(index) + text)
@@ -251,14 +250,15 @@ def calc_title_length(title):
 
     return length
 
-def generate_menu_prompt():
-
-    return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'select:' + COLOUR_RESET + ' '
-
-def generate_search_prompt():
-
-    return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'enter text to search for: '\
-            + COLOUR_RESET + ' '
+def calc_box_left():
+    if BOX_POSITION == 'left':
+        return BOX_INDENT
+    elif BOX_POSITION == 'center':
+        rows, columns = get_screen_size()
+        return (columns // 2) - (box_width // 2)
+    else:
+        rows, columns = get_screen_size()
+        return columns - BOX_INDENT - box_width
 
 def allowed_item_key(text):
 
@@ -267,16 +267,6 @@ def allowed_item_key(text):
 def allowed_option_key(text):
 
     return COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG + text + COLOUR_RESET
-
-def get_screen_size():
-    rows_str, columns_str = os.popen('stty size', 'r').read().split()
-
-    return int(rows_str), int(columns_str)
-
-def reset_display():
-    print('\033c')
-
-    return
 
 def get_db_categories():
     con = lite.connect(database_pathfile)
@@ -464,6 +454,16 @@ def write_entry_to_file(entry_name, entry_fields):
     else:
         print((' ' * (box_left + PROMPT_INDENT)) + "! {} !\n".\
                 format(COLOURS_WRITE_FAIL + 'did not write (file already exists)' + COLOUR_RESET))
+
+    return
+
+def get_screen_size():
+    rows_str, columns_str = os.popen('stty size', 'r').read().split()
+
+    return int(rows_str), int(columns_str)
+
+def reset_display():
+    print('\033c')
 
     return
 
