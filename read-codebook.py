@@ -72,17 +72,19 @@ TITLE_SPACING = 1               # space between bookends and title on left and r
 MENU_ITEM_INDENT = 1            # space between the left border and the index parentheses
 MENU_ITEM_GAP = 1               # space between index parentheses and the displayed item
 MENU_ITEM_TAIL = 1              # space between item and right border
+MENU_ITEM_FAVORITE = ' ★'        # show this when menu item is a favorite
 PROMPT_INDENT = 1               # from left of box to start of prompt
 ENTRY_NAME_INDENT = 1           # from left of box to name
 ENTRY_VALUE_INDENT = 4          # from left of box to value
+ENTRY_NAME_FAVORITE = ' ★'      # show this when displaying favorite item fields
 
 # these are only used for calculation
 BOX_TITLE_CHARS_LENGTH = 4      # left corner, title bookends, right corner
 BOX_VERTICAL_CHARS_LENGTH = 2   # upright lines
 BOX_FOOTER_CHARS_LENGTH = 2     # left corner, right corner
 
-MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + MENU_ITEM_TAIL\
-                    + BOX_VERTICAL_CHARS_LENGTH
+MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + (len(MENU_ITEM_FAVORITE))\
+                    + MENU_ITEM_TAIL + BOX_VERTICAL_CHARS_LENGTH
 
 SCRIPT_DETAILS = '{} ({})'.format(COLOUR_LIGHT_FG + COLOUR_BOLD + SCRIPT_FILE + COLOUR_RESET,
                                     SCRIPT_DATE)
@@ -113,8 +115,13 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
         if display_menu:
             print(header)
 
-            for index, record in enumerate(table):
-                print(generate_menu_line_item(index + 1, record[column]))
+            for index, row in enumerate(table):
+                try:
+                    show_favorite = row['favorite']
+                except:
+                    show_favorite = ''
+
+                print(generate_menu_line_item(index + 1, row[column], show_favorite))
 
             if total_items > 0: print(separator)
             if 'S' in options: print(generate_menu_line_option('S', 'Search'))
@@ -208,13 +215,18 @@ def generate_menu_lines(title, function = False):
 
     return menu_header, menu_separator, menu_footer
 
-def generate_menu_line_item(index, text):
+def generate_menu_line_item(index, text, show_favorite = False):
+    if show_favorite:
+        line_favorite = MENU_ITEM_FAVORITE
+    else:
+        line_favorite = (' ' * len(MENU_ITEM_FAVORITE))
 
     return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
             + '(' + allowed_item_key(str(index)) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
             + (' ' * MENU_ITEM_GAP) + COLOURS_MENU_ITEM + text\
             + (' ' * (box_width - calc_line_item_width(index, text) - MENU_ROW_MIN_LENGTH))\
-            + (' ' * MENU_ITEM_TAIL) + COLOUR_RESET + COLOURS_MENU_BOX + '│' + COLOUR_RESET
+            + line_favorite + (' ' * MENU_ITEM_TAIL) + COLOUR_RESET + COLOURS_MENU_BOX + '│'\
+            + COLOUR_RESET
 
 def generate_menu_line_option(char, text):
 
@@ -222,7 +234,7 @@ def generate_menu_line_option(char, text):
             + '(' + allowed_option_key(char) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
             + (' ' * MENU_ITEM_GAP) + text\
             + (' ' * (box_width - calc_line_item_width(char, text) - MENU_ROW_MIN_LENGTH))\
-            + (' ' * MENU_ITEM_TAIL) + '│' + COLOUR_RESET
+            + (' ' * len(MENU_ITEM_FAVORITE)) + (' ' * MENU_ITEM_TAIL) + '│' + COLOUR_RESET
 
 def generate_menu_prompt():
 
@@ -361,7 +373,7 @@ def get_db_favorites():
 def generate_single_entry_screen(title, entry_fields, favorite = False):
     rows, columns = get_screen_size()
 
-    if favorite: title = '★ ' + title + ' ★'
+    if favorite: title += ENTRY_NAME_FAVORITE
 
     title_length = calc_title_length(title)
 
