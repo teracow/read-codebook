@@ -1,6 +1,8 @@
 ![icon](images/icon.png) read-codebook.py
 ---
-This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shell\))** and **[Python](https://en.wikipedia.org/wiki/Python_(programming_language))** scripts to decrypt and read through a **[Codebook](https://www.zetetic.net/codebook/)** database '**strip.db**' file. The idea is to quickly traverse the dB structure to get to required infomation. This is entirely console based and is easy to use. No modifications to the database are possible.
+This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shell\))** and **[Python](https://en.wikipedia.org/wiki/Python_(programming_language))** scripts to assist the user to decrypt and read through a **[Codebook](https://www.zetetic.net/codebook/)** '**strip.db**' file. The idea is to quickly traverse the dB structure to get to required infomation. This is entirely console based and is easy to use. No modifications to the database are possible. 
+
+This is not a hacking tool - the decryption passphrase must already be known.
 
 ---
 ###**Description:**
@@ -13,9 +15,9 @@ This is a combination of **[BASH](https://en.wikipedia.org/wiki/Bash_\(Unix_shel
 
 3. A decrypted (plaintext) database is then written to '**/dev/shm/decrypt-strip/plaintext.db**'.
 
-4. Then open this plaintext dB using the included Python reader to examine the contents. There is an option to write particular entries to text files in the working directory.
+4. Open this plaintext dB using the included Python reader to examine the contents. There is an option to write particular entries to text files in the working directory.
 
-5. When you're done, quit the reader and delete the plaintext database file.
+5. Quit the reader and delete the plaintext database file.
 
 ---
 ###**Screenshots:**
@@ -66,4 +68,4 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-17) - None.
+- (2016-08-18) - None.
