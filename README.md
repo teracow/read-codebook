@@ -33,7 +33,7 @@ This is not a hacking tool - the decryption passphrase must already be known.
 ---
 ###**Notes:**
 
-As creating a plain-text copy of the database is a security risk, it is recommended that this only be done in a secure environment (i.e. don't run this on Windows), and only if you understand why the risk is there. I do not take any responsibilty for the integrity and security of your data. 
+As creating a plain-text copy of the database is a security risk, it is recommended that this only be done in a secure environment (i.e. don't run this on Windows), and only if you understand why the risk is there. I do not take any responsibility for the integrity and security of your data. 
 
 These script were written for my convenience so that I can access the '**strip.db**' file in the event that my iPhone is lost, stolen or damaged. Being able to do so means I'm more likely to store important information in my copy of the great **[Codebook](https://www.zetetic.net/codebook/)** app. ![smiley](images/smiley.png)
 
@@ -68,4 +68,4 @@ Suggestions / comments / bug reports / advice (are|is) most welcome. :) [email m
 ---
 ###**Known Issues:**
 
-- (2016-08-18) - None.
+- (2016-08-19) - When searching, results menu entry is shown twice if search text appears in entry name and as a field value.

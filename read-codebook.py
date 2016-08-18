@@ -27,7 +27,7 @@ import getopt
 import sqlite3 as lite
 
 SCRIPT_FILE = 'read-codebook.py'
-SCRIPT_DATE = '2016-08-18'
+SCRIPT_DATE = '2016-08-19'
 
 # text colours
 COLOUR_WHITE_FG = '\033[97m'
@@ -335,7 +335,7 @@ def get_db_fields_from_entry(entry_id):
 
     return cur.fetchall()
 
-def get_db_search(text):
+def get_db_search_values(text):
     con = lite.connect(database_pathfile)
     base_sql = 'SELECT  entries.id          AS entry_id,\
                         entries.name        AS entry_name,\
@@ -350,6 +350,22 @@ def get_db_search(text):
         con.row_factory = lite.Row
         cur = con.cursor()
         cur.execute(base_sql + 'WHERE value LIKE ? ORDER BY entry_name COLLATE NOCASE',
+                    ('%' + text + '%',))
+
+    return cur.fetchall()
+
+def get_db_search_entry_names(text):
+    con = lite.connect(database_pathfile)
+    base_sql = 'SELECT  entries.id          AS entry_id,\
+                        entries.name        AS entry_name,\
+                        entries.type        AS entry_type,\
+                        entries.is_favorite AS favorite\
+                FROM entries '
+
+    with con:
+        con.row_factory = lite.Row
+        cur = con.cursor()
+        cur.execute(base_sql + 'WHERE entry_name LIKE ? ORDER BY entry_name COLLATE NOCASE',
                     ('%' + text + '%',))
 
     return cur.fetchall()
@@ -573,12 +589,16 @@ def main(argv):
         if current_menu == 'search':
             try:
                 search_text = input(generate_search_prompt())
-                current_menu = 'search results'
+                if search_text:
+                    current_menu = 'search results'
+                else:
+                    print()
             except KeyboardInterrupt:
                 current_menu = menu_stack.pop()
 
         if current_menu == 'search results':
-            search_entries = get_db_search(search_text)
+            search_entries = get_db_search_entry_names(search_text)
+            search_entries += get_db_search_values(search_text)
             reset_display()
             search_menu_index = draw_menu('Search results for \"' + search_text + '\"',
                                             search_entries, 'entry_name', 'BMF', None, True)
@@ -595,8 +615,6 @@ def main(argv):
                 entry_row = search_entries[int(search_menu_index) - 1]
                 menu_stack.append(current_menu)
                 current_menu = 'fields'
-
-        print('before favs: ' + current_menu)
 
         if current_menu == 'favorites':
             favorites_entries = get_db_favorites()
