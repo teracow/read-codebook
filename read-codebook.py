@@ -342,6 +342,7 @@ def get_db_search(text):
     base_sql = 'SELECT  entries.id          AS entry_id,\
                         entries.name        AS entry_name,\
                         entries.type        AS entry_type,\
+                        entries.is_favorite AS favorite,\
                         fields.value\
                 FROM entries\
                         JOIN fields         ON fields.entry_id = entries.id\
