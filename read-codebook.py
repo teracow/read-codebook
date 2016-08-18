@@ -50,17 +50,15 @@ COLOURS_MENU_BOX = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
 COLOURS_MENU_TITLE_ITEM = COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
 COLOURS_MENU_TITLE_FUNCTION = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
 COLOURS_MENU_ITEM = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
-
 COLOURS_SINGLE_ENTRY_BOX = COLOUR_GREY_FG + COLOUR_DARK_GREY_BG
 COLOURS_SINGLE_ENTRY_TITLE = COLOUR_WHITE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
 COLOURS_SINGLE_ENTRY_HEADER = COLOUR_GREY_FG + COLOUR_DARK_GREY_BG
 COLOURS_SINGLE_ENTRY_NAME = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
 COLOURS_SINGLE_ENTRY_VALUE = COLOUR_ORANGE_FG + COLOUR_DARK_GREY_BG
-
 COLOURS_PROMPT = COLOUR_LIGHT_FG + COLOUR_BOLD
-
 COLOURS_WRITE_OK = COLOUR_GREEN_FG + COLOUR_BOLD
 COLOURS_WRITE_FAIL = COLOUR_RED_FG + COLOUR_BOLD
+COLOURS_FAVORITE_STAR = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
 
 #BOX_POSITION = 'left'           # left of screen
 BOX_POSITION = 'center'         # center of screen
@@ -217,7 +215,7 @@ def generate_menu_lines(title, function = False):
 
 def generate_menu_line_item(index, text, show_favorite = False):
     if show_favorite:
-        line_favorite = MENU_ITEM_FAVORITE
+        line_favorite = COLOURS_FAVORITE_STAR + MENU_ITEM_FAVORITE
     else:
         line_favorite = (' ' * len(MENU_ITEM_FAVORITE))
 
@@ -374,9 +372,11 @@ def get_db_favorites():
 def generate_single_entry_screen(title, entry_fields, favorite = False):
     rows, columns = get_screen_size()
 
-    if favorite: title += ENTRY_NAME_FAVORITE
-
-    title_length = calc_title_length(title)
+    if favorite:
+        title_length = calc_title_length(title + ENTRY_NAME_FAVORITE)
+        title += COLOURS_FAVORITE_STAR + ENTRY_NAME_FAVORITE
+    else:
+        title_length = calc_title_length(title)
 
     if BOX_POSITION == 'center':
         title_padding = (columns - title_length) // 2
