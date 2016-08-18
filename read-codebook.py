@@ -335,7 +335,7 @@ def get_db_fields_from_entry(entry_id):
 
     return cur.fetchall()
 
-def get_db_search_values(text):
+def get_db_search(text):
     con = lite.connect(database_pathfile)
     base_sql = 'SELECT  entries.id          AS entry_id,\
                         entries.name        AS entry_name,\
@@ -349,24 +349,8 @@ def get_db_search_values(text):
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE value LIKE ? ORDER BY entry_name COLLATE NOCASE',
-                    ('%' + text + '%',))
-
-    return cur.fetchall()
-
-def get_db_search_entry_names(text):
-    con = lite.connect(database_pathfile)
-    base_sql = 'SELECT  entries.id          AS entry_id,\
-                        entries.name        AS entry_name,\
-                        entries.type        AS entry_type,\
-                        entries.is_favorite AS favorite\
-                FROM entries '
-
-    with con:
-        con.row_factory = lite.Row
-        cur = con.cursor()
-        cur.execute(base_sql + 'WHERE entry_name LIKE ? ORDER BY entry_name COLLATE NOCASE',
-                    ('%' + text + '%',))
+        cur.execute(base_sql + 'WHERE value LIKE ? OR entry_name LIKE ? COLLATE NOCASE\
+                    GROUP BY entry_name ORDER BY entry_name', ('%' + text + '%', '%' + text + '%'))
 
     return cur.fetchall()
 
@@ -597,8 +581,7 @@ def main(argv):
                 current_menu = menu_stack.pop()
 
         if current_menu == 'search results':
-            search_entries = get_db_search_entry_names(search_text)
-            search_entries += get_db_search_values(search_text)
+            search_entries = get_db_search(search_text)
             reset_display()
             search_menu_index = draw_menu('Search results for \"' + search_text + '\"',
                                             search_entries, 'entry_name', 'BMF', None, True)
