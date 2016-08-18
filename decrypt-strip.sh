@@ -15,16 +15,16 @@ Init()
 
 	local script_file="decrypt-strip.sh"
 	local script_name="${script_file%.*}"
-	script_details="${script_file} (2016-08-12)"
+	script_details="${script_file} (2016-08-18)"
 
 	temp_path="/dev/shm/${script_name}"
 	local encrypted_file="strip.db"
-	local unencrypted_file="plaintext.db"
 	decrypter="sqlcipher"
+	local unencrypted_file="plaintext.db"
 	reader="read-codebook.py"
+	encrypted_pathfile="./${encrypted_file}"
 	unencrypted_pathfile="${temp_path}/${unencrypted_file}"
 	reader_pathfile="$(dirname "$BASH_SOURCE")/${reader}"
-	encrypted_pathfile="./${encrypted_file}"
 
 	echo "$script_details"
 	echo
@@ -86,8 +86,8 @@ if [ "$?" -gt "0" ] ; then
 fi
 
 if [ -e "$unencrypted_pathfile" ] ; then
-	echo "! Plaintext database file already exists: [$unencrypted_pathfile]"
-	echo -n "? Delete this file first? (y/n) "
+	echo "! Plaintext database file already exists!"
+	echo -n "? Delete this file? [$unencrypted_pathfile] (y/n) "
 	read -n 1 result
 	echo
 
@@ -98,7 +98,7 @@ if [ -e "$unencrypted_pathfile" ] ; then
 	fi
 fi
 
-echo -n "? Enter your CodeBook passphrase: "
+echo -n "? Enter your Codebook passphrase: "
 
 # http://stackoverflow.com/questions/4316730/linux-scripting-hiding-user-input-on-terminal
 while IFS= read -r -s -n1 pass; do
@@ -120,13 +120,13 @@ echo "$sql_cmd" | "$decrypter" "$encrypted_pathfile" > /dev/null 2>&1
 if [ "$?" -eq "0" ] ; then
 	echo "done!"
 
-	echo -n "? Open file in [$reader] ? (y/n) "
+	echo -n "? Open plaintext file in [$reader] ? (y/n) "
 	read -n 1 result
 	echo
 
 	if [ "$result" == "y" ] || [ "$result" == "Y" ] ; then
 		"$reader_pathfile" -i "$unencrypted_pathfile"
-		echo -n "? Delete file [$unencrypted_pathfile] ? (y/n) "
+		echo -n "? Delete this file? [$unencrypted_pathfile] (y/n) "
 		read -n 1 result
 		echo
 
