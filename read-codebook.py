@@ -70,11 +70,11 @@ TITLE_SPACING = 1               # space between bookends and title on left and r
 MENU_ITEM_INDENT = 1            # space between the left border and the index parentheses
 MENU_ITEM_GAP = 1               # space between index parentheses and the displayed item
 MENU_ITEM_TAIL = 1              # space between item and right border
-MENU_ITEM_FAVORITE = ' ★'        # show this when menu item is a favorite
+MENU_ITEM_FAVORITE = ' ✶'       # show this when menu item is a favorite
 PROMPT_INDENT = 1               # from left of box to start of prompt
 ENTRY_NAME_INDENT = 1           # from left of box to name
 ENTRY_VALUE_INDENT = 4          # from left of box to value
-ENTRY_NAME_FAVORITE = ' ★'      # show this when displaying favorite item fields
+ENTRY_NAME_FAVORITE = ' ✶'      # show this when displaying favorite item fields
 
 # these are only used for calculation
 BOX_TITLE_CHARS_LENGTH = 4      # left corner, title bookends, right corner
@@ -542,6 +542,7 @@ def main(argv):
             if category_menu_index == -2:
                 current_menu = 'search'
             elif category_menu_index == -3:
+                menu_stack.append(current_menu)
                 current_menu = 'favorites'
             else:
                 current_menu = 'entries'
@@ -580,10 +581,13 @@ def main(argv):
             search_entries = get_db_search(search_text)
             reset_display()
             search_menu_index = draw_menu('Search results for \"' + search_text + '\"',
-                                            search_entries, 'entry_name', 'BM', None, True)
+                                            search_entries, 'entry_name', 'BMF', None, True)
 
             if search_menu_index == 0:
                 current_menu = menu_stack.pop()
+            elif search_menu_index == -3:
+                menu_stack.append(current_menu)
+                current_menu = 'favorites'
             elif search_menu_index == -4:
                 menu_stack = []
                 current_menu = 'categories'
@@ -592,14 +596,19 @@ def main(argv):
                 menu_stack.append(current_menu)
                 current_menu = 'fields'
 
+        print('before favs: ' + current_menu)
+
         if current_menu == 'favorites':
             favorites_entries = get_db_favorites()
             reset_display()
-            favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BM',
+            favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BMS',
                                             None, True)
 
             if favorite_menu_index == 0:
                 current_menu = menu_stack.pop()
+            elif favorite_menu_index == -2:
+                menu_stack.append(current_menu)
+                current_menu = 'search'
             elif favorite_menu_index == -4:
                 menu_stack = []
                 current_menu = 'categories'
