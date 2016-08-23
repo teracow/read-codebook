@@ -47,8 +47,8 @@ COLOUR_RESET = '\033[0m'
 
 # colour scheme
 COLOURS_MENU_BOX = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
-COLOURS_MENU_TITLE_ITEM = COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
-COLOURS_MENU_TITLE_FUNCTION = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
+COLOURS_MENU_TITLE_REGULAR = COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
+COLOURS_MENU_TITLE_SPECIAL = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
 COLOURS_MENU_ITEM = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
 COLOURS_SINGLE_ENTRY_BOX = COLOUR_GREY_FG + COLOUR_DARK_GREY_BG
 COLOURS_SINGLE_ENTRY_TITLE = COLOUR_WHITE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
@@ -56,9 +56,11 @@ COLOURS_SINGLE_ENTRY_HEADER = COLOUR_GREY_FG + COLOUR_DARK_GREY_BG
 COLOURS_SINGLE_ENTRY_NAME = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
 COLOURS_SINGLE_ENTRY_VALUE = COLOUR_ORANGE_FG + COLOUR_DARK_GREY_BG
 COLOURS_PROMPT = COLOUR_LIGHT_FG + COLOUR_BOLD
+COLOURS_ALLOWED_ITEM_KEY = COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
+COLOURS_ALLOWED_OPTION_KEY = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
+COLOURS_FAVORITE_STAR = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
 COLOURS_WRITE_OK = COLOUR_GREEN_FG + COLOUR_BOLD
 COLOURS_WRITE_FAIL = COLOUR_RED_FG + COLOUR_BOLD
-COLOURS_FAVORITE_STAR = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
 
 #BOX_POSITION = 'left'           # left of screen
 BOX_POSITION = 'center'         # center of screen
@@ -87,11 +89,12 @@ MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + (len(MENU_ITEM_FAVO
 SCRIPT_DETAILS = '{} ({})'.format(COLOUR_LIGHT_FG + COLOUR_BOLD + SCRIPT_FILE + COLOUR_RESET,
                                     SCRIPT_DATE)
 
+DATABASE = None
 
-def draw_menu(title, table, column, options, prompt_only = False, function = False):
-    # if prompt_only = True    : don't show menu box and items, only show prompt line
-    # if function = True       : menu title colour will be COLOURS_MENU_TITLE_FUNCTION
-    # if function = False      : menu title colour will be COLOURS_MENU_TITLE_ITEM
+def draw_menu(title, table, column, options, prompt_only = False, special = False):
+    # if prompt_only is True    : don't show menu box and items, only show prompt line
+    # if special is True        : menu title colour will be COLOURS_MENU_TITLE_SPECIAL
+    # if special is False       : menu title colour will be COLOURS_MENU_TITLE_REGULAR
 
     global box_width, box_left
 
@@ -107,7 +110,7 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
             box_width = line_length + MENU_ROW_MIN_LENGTH
         if title_length > box_width: box_width = title_length
         box_left = calc_box_left()
-        header, separator, footer = generate_menu_lines(title, function)
+        header, separator, footer = generate_menu_lines(title, special)
 
     while True:
         if display_menu:
@@ -175,15 +178,15 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
     return int(user_selection)
 
 
-def generate_menu_lines(title, function = False):
+def generate_menu_lines(title, special = False):
     title_length = calc_title_length(title)
 
-    if function: title_colour = COLOURS_MENU_TITLE_FUNCTION
-    else: title_colour = COLOURS_MENU_TITLE_ITEM
+    if special: title_colour = COLOURS_MENU_TITLE_SPECIAL
+    else: title_colour = COLOURS_MENU_TITLE_REGULAR
 
     if title:
-        menu_header = (' ' * (box_left
-                        + ((box_width // 2) - ((len(SCRIPT_FILE) + len(SCRIPT_DATE) + 3) // 2))))\
+        menu_header = (' ' * (box_left + ((box_width // 2)
+                        - ((len(SCRIPT_FILE) + len(SCRIPT_DATE) + 3) // 2))))\
                         + SCRIPT_DETAILS + '\n\n'
 
         if BOX_POSITION == 'center':
@@ -218,7 +221,7 @@ def generate_menu_line_item(index, text, show_favorite = False):
     else: line_favorite = (' ' * len(MENU_ITEM_FAVORITE))
 
     return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
-            + '(' + allowed_item_key(str(index)) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
+            + '(' + COLOURS_ALLOWED_ITEM_KEY + str(index) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
             + (' ' * MENU_ITEM_GAP) + COLOURS_MENU_ITEM + text\
             + (' ' * (box_width - calc_line_item_width(index, text) - MENU_ROW_MIN_LENGTH))\
             + line_favorite + (' ' * MENU_ITEM_TAIL) + COLOUR_RESET + COLOURS_MENU_BOX + '│'\
@@ -227,7 +230,7 @@ def generate_menu_line_item(index, text, show_favorite = False):
 
 def generate_menu_line_option(char, text):
     return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
-            + '(' + allowed_option_key(char) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
+            + '(' + COLOURS_ALLOWED_OPTION_KEY + char + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
             + (' ' * MENU_ITEM_GAP) + text\
             + (' ' * (box_width - calc_line_item_width(char, text) - MENU_ROW_MIN_LENGTH))\
             + (' ' * len(MENU_ITEM_FAVORITE)) + (' ' * MENU_ITEM_TAIL) + '│' + COLOUR_RESET
@@ -276,16 +279,8 @@ def calc_box_left():
         return (columns // 2) - (box_width // 2)
 
 
-def allowed_item_key(text):
-    return COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG + text + COLOUR_RESET
-
-
-def allowed_option_key(text):
-    return COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG + text + COLOUR_RESET
-
-
 def get_db_categories():
-    con = lite.connect(database_pathfile)
+    con = lite.connect(DATABASE)
     base_sql = 'SELECT  id          AS category_id,\
                         name        AS category_name\
                 FROM categories '
@@ -299,7 +294,7 @@ def get_db_categories():
 
 
 def get_db_entries_from_category(category_id):
-    con = lite.connect(database_pathfile)
+    con = lite.connect(DATABASE)
     base_sql = 'SELECT  categories.id       AS category_id,\
                         categories.name     AS category_name,\
                         entries.id          AS entry_id,\
@@ -319,7 +314,7 @@ def get_db_entries_from_category(category_id):
 
 
 def get_db_fields_from_entry(entry_id):
-    con = lite.connect(database_pathfile)
+    con = lite.connect(DATABASE)
     base_sql = 'SELECT  entry_id,\
                         entries.name        AS entry_name,\
                         entries.type        AS entry_type,\
@@ -340,7 +335,7 @@ def get_db_fields_from_entry(entry_id):
 
 
 def get_db_search(text):
-    con = lite.connect(database_pathfile)
+    con = lite.connect(DATABASE)
     base_sql = 'SELECT  entries.id          AS entry_id,\
                         entries.name        AS entry_name,\
                         entries.type        AS entry_type,\
@@ -360,7 +355,7 @@ def get_db_search(text):
 
 
 def get_db_favorites():
-    con = lite.connect(database_pathfile)
+    con = lite.connect(DATABASE)
     base_sql = 'SELECT  entries.id          AS entry_id,\
                         entries.name        AS entry_name,\
                         entries.type        AS entry_type,\
@@ -375,7 +370,7 @@ def get_db_favorites():
     return cur.fetchall()
 
 
-def generate_single_entry_screen(title, entry_fields, favorite = False):
+def generate_single_entry_screen(title, fields, favorite = False):
     rows, columns = get_screen_size()
 
     if favorite:
@@ -401,7 +396,7 @@ def generate_single_entry_screen(title, entry_fields, favorite = False):
 
     content = ''
 
-    for field in entry_fields:
+    for field in fields:
         if field['data_type'] == 'note' or field['entry_type'] == 1:
             content += generate_note_screen('Note', field['value'], columns)
             break
@@ -415,10 +410,10 @@ def generate_single_entry_screen(title, entry_fields, favorite = False):
     return header + content + footer
 
 
-def generate_single_entry_file(entry_fields):
+def generate_single_entry_file(fields):
     content = ''
 
-    for field in entry_fields:
+    for field in fields:
         if field['data_type'] == 'note' or field['entry_type'] == 1:
             content += generate_field_file('Note', field['value'])
         else:
@@ -528,19 +523,10 @@ def what_are_my_options(argv):
     return input_pathfile
 
 
-def main(argv):
-    global database_pathfile
-
-    print(SCRIPT_DETAILS)
-
-    database_pathfile = what_are_my_options(argv)
-    if not os.path.exists(database_pathfile):
-        print('\n! File not found! [{}]'.format(database_pathfile))
-        sys.exit()
-
-    all_categories = get_db_categories()
+def main():
     menu_stack = []
     current_menu = 'categories'
+    all_categories = get_db_categories()
 
     while True:
         if current_menu == 'categories':
@@ -651,5 +637,10 @@ def main(argv):
                     break
 
 if __name__ == '__main__':
-    result = main(sys.argv[1:])
-    exit(result)
+    print(SCRIPT_DETAILS)
+
+    DATABASE = what_are_my_options(sys.argv[1:])
+    if not os.path.exists(DATABASE):
+        print('\n! File not found! [{}]'.format(DATABASE))
+    else:
+        main()
