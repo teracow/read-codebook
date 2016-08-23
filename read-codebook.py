@@ -26,7 +26,7 @@ import sys
 import getopt
 import sqlite3 as lite
 
-SCRIPT_FILE = 'read-codebook.py'
+SCRIPT_FILE = os.path.basename(sys.argv[0])
 SCRIPT_DATE = '2016-08-23'
 
 # text colours
@@ -86,6 +86,7 @@ MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + (len(MENU_ITEM_FAVO
 
 SCRIPT_DETAILS = '{} ({})'.format(COLOUR_LIGHT_FG + COLOUR_BOLD + SCRIPT_FILE + COLOUR_RESET,
                                     SCRIPT_DATE)
+
 
 def draw_menu(title, table, column, options, prompt_only = False, function = False):
     # if prompt_only = True    : don't show menu box and items, only show prompt line
@@ -173,6 +174,7 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
 
     return int(user_selection)
 
+
 def generate_menu_lines(title, function = False):
     title_length = calc_title_length(title)
 
@@ -210,11 +212,10 @@ def generate_menu_lines(title, function = False):
 
     return menu_header, menu_separator, menu_footer
 
+
 def generate_menu_line_item(index, text, show_favorite = False):
-    if show_favorite:
-        line_favorite = COLOURS_FAVORITE_STAR + MENU_ITEM_FAVORITE
-    else:
-        line_favorite = (' ' * len(MENU_ITEM_FAVORITE))
+    if show_favorite: line_favorite = COLOURS_FAVORITE_STAR + MENU_ITEM_FAVORITE
+    else: line_favorite = (' ' * len(MENU_ITEM_FAVORITE))
 
     return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
             + '(' + allowed_item_key(str(index)) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
@@ -223,6 +224,7 @@ def generate_menu_line_item(index, text, show_favorite = False):
             + line_favorite + (' ' * MENU_ITEM_TAIL) + COLOUR_RESET + COLOURS_MENU_BOX + '│'\
             + COLOUR_RESET
 
+
 def generate_menu_line_option(char, text):
     return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
             + '(' + allowed_option_key(char) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
@@ -230,12 +232,15 @@ def generate_menu_line_option(char, text):
             + (' ' * (box_width - calc_line_item_width(char, text) - MENU_ROW_MIN_LENGTH))\
             + (' ' * len(MENU_ITEM_FAVORITE)) + (' ' * MENU_ITEM_TAIL) + '│' + COLOUR_RESET
 
+
 def generate_menu_prompt():
     return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'select:' + COLOUR_RESET + ' '
+
 
 def generate_search_prompt():
     return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'enter text to search for: '\
             + COLOUR_RESET + ' '
+
 
 def longest_column_entry(entries, name):
     # checks the length of every row in column 'name' and returns the longest
@@ -248,14 +253,17 @@ def longest_column_entry(entries, name):
 
     return current_length
 
+
 def calc_line_item_width(index, text):
     return len(str(index) + text)
+
 
 def calc_title_length(title):
     length = len(title) + BOX_TITLE_CHARS_LENGTH + (TITLE_SPACING * 2)
     if BOX_POSITION != 'center': length += BOX_TITLE_INDENT
 
     return length
+
 
 def calc_box_left():
     if BOX_POSITION == 'left':
@@ -267,11 +275,14 @@ def calc_box_left():
         rows, columns = get_screen_size()
         return (columns // 2) - (box_width // 2)
 
+
 def allowed_item_key(text):
     return COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG + text + COLOUR_RESET
 
+
 def allowed_option_key(text):
     return COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG + text + COLOUR_RESET
+
 
 def get_db_categories():
     con = lite.connect(database_pathfile)
@@ -285,6 +296,7 @@ def get_db_categories():
         cur.execute(base_sql + 'ORDER BY category_name')
 
     return cur.fetchall()
+
 
 def get_db_entries_from_category(category_id):
     con = lite.connect(database_pathfile)
@@ -304,6 +316,7 @@ def get_db_entries_from_category(category_id):
                     (category_id,))
 
     return cur.fetchall()
+
 
 def get_db_fields_from_entry(entry_id):
     con = lite.connect(database_pathfile)
@@ -325,6 +338,7 @@ def get_db_fields_from_entry(entry_id):
 
     return cur.fetchall()
 
+
 def get_db_search(text):
     con = lite.connect(database_pathfile)
     base_sql = 'SELECT  entries.id          AS entry_id,\
@@ -344,6 +358,7 @@ def get_db_search(text):
 
     return cur.fetchall()
 
+
 def get_db_favorites():
     con = lite.connect(database_pathfile)
     base_sql = 'SELECT  entries.id          AS entry_id,\
@@ -358,6 +373,7 @@ def get_db_favorites():
         cur.execute(base_sql + 'WHERE favorite = 1 ORDER BY entry_name COLLATE NOCASE')
 
     return cur.fetchall()
+
 
 def generate_single_entry_screen(title, entry_fields, favorite = False):
     rows, columns = get_screen_size()
@@ -398,6 +414,7 @@ def generate_single_entry_screen(title, entry_fields, favorite = False):
 
     return header + content + footer
 
+
 def generate_single_entry_file(entry_fields):
     content = ''
 
@@ -408,6 +425,7 @@ def generate_single_entry_file(entry_fields):
             content += generate_field_file(field['field_name'], field['value']) + '\n'
 
     return content
+
 
 def generate_note_screen(name, value, columns):
     name += ':'
@@ -429,6 +447,7 @@ def generate_note_screen(name, value, columns):
 
     return name_line + value_line
 
+
 def generate_field_screen(name, value, columns):
     name += ':'
     name_min_length = len(name) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_NAME_INDENT
@@ -446,8 +465,10 @@ def generate_field_screen(name, value, columns):
 
     return name_line + value_line
 
+
 def generate_field_file(name, value):
     return name + ':\n' + value + '\n'
+
 
 def write_entry_to_file(entry_name, entry_fields):
     output_pathfile = entry_name.replace(' ', '_').replace('/', '_').replace('\\', '_').\
@@ -466,56 +487,55 @@ def write_entry_to_file(entry_name, entry_fields):
 
     return
 
+
 def get_screen_size():
     rows_str, columns_str = os.popen('stty size', 'r').read().split()
 
     return int(rows_str), int(columns_str)
+
 
 def reset_display():
     print('\033c')
 
     return
 
-def check_opts(argv):
-    global database_pathfile
 
-    database_pathfile = ''
-    help_message = '\nUsage: ./' + SCRIPT_FILE + ' -i [inputfile]'
+def show_help():
+    print('\nUsage: ./{} -i [inputfile]'.format(SCRIPT_FILE))
+    sys.exit()
+
+
+def what_are_my_options(argv):
+    input_pathfile = ''
 
     try:
         opts, args = getopt.getopt(argv,'hvi:',['help','version','input-file='])
     except getopt.GetoptError:
-        print(help_message)
-        return 2
+        show_help()
 
     for opt, arg in opts:
         if opt in ('-h', '--help'):
-            print(help_message)
-            return 1
+            show_help()
         elif opt in ('-v', '--version'):
-            return 1
+            sys.exit()
         elif opt in ('-i', '--input-file'):
-            database_pathfile = arg
+            if not arg:
+                show_help()
+            input_pathfile = arg
 
-    if not database_pathfile:
-        print(help_message)
-        return 2
+    if not input_pathfile: show_help()
 
-    if not db_exists(): return 3
+    return input_pathfile
 
-    return 0
-
-def db_exists():
-    if os.path.exists(database_pathfile): return True
-    else:
-        print('\n! File not found! [{}]'.format(database_pathfile))
-        return False
 
 def main(argv):
+    global database_pathfile
+
     print(SCRIPT_DETAILS)
 
-    result = check_opts(argv)
-    if result > 0: return result
+    database_pathfile = what_are_my_options(argv)
+    if not os.path.exists(database_pathfile):
+        print('\n! File not found! [{}]'.format(database_pathfile))
 
     all_categories = get_db_categories()
     menu_stack = []
@@ -561,10 +581,11 @@ def main(argv):
         if current_menu == 'search':
             try:
                 search_text = input(generate_search_prompt())
-                if search_text: current_menu = 'search results'
-                else: print()
             except KeyboardInterrupt:
                 current_menu = menu_stack.pop()
+            else:
+                if search_text: current_menu = 'search results'
+                else: print()
 
         if current_menu == 'search results':
             search_entries = get_db_search(search_text)
