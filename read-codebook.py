@@ -27,7 +27,7 @@ import getopt
 import sqlite3 as lite
 
 SCRIPT_FILE = 'read-codebook.py'
-SCRIPT_DATE = '2016-08-19'
+SCRIPT_DATE = '2016-08-23'
 
 # text colours
 COLOUR_WHITE_FG = '\033[97m'
@@ -88,23 +88,22 @@ SCRIPT_DETAILS = '{} ({})'.format(COLOUR_LIGHT_FG + COLOUR_BOLD + SCRIPT_FILE + 
                                     SCRIPT_DATE)
 
 def draw_menu(title, table, column, options, prompt_only = False, function = False):
-    # prompt_only = True    : don't show menu box and items, only show prompt line
-    # function = True    : menu title colour will be COLOURS_MENU_TITLE_FUNCTION
-    # function = False   : menu title colour will be COLOURS_MENU_TITLE_ITEM
+    # if prompt_only = True    : don't show menu box and items, only show prompt line
+    # if function = True       : menu title colour will be COLOURS_MENU_TITLE_FUNCTION
+    # if function = False      : menu title colour will be COLOURS_MENU_TITLE_ITEM
 
     global box_width, box_left
 
     total_items = len(table)
 
-    if prompt_only:
-        display_menu = False
+    if prompt_only: display_menu = False
     else:
         display_menu = True
         box_width = 31      # minimum box width
         line_length = longest_column_entry(table, column)
         title_length = calc_title_length(title)
-        if (line_length + MENU_ROW_MIN_LENGTH) > box_width: box_width = line_length\
-                                                                        + MENU_ROW_MIN_LENGTH
+        if (line_length + MENU_ROW_MIN_LENGTH) > box_width:
+            box_width = line_length + MENU_ROW_MIN_LENGTH
         if title_length > box_width: box_width = title_length
         box_left = calc_box_left()
         header, separator, footer = generate_menu_lines(title, function)
@@ -172,15 +171,13 @@ def draw_menu(title, table, column, options, prompt_only = False, function = Fal
 
         display_menu = False    # for any other char - only re-show prompt
 
-    return user_selection
+    return int(user_selection)
 
 def generate_menu_lines(title, function = False):
     title_length = calc_title_length(title)
 
-    if function:
-        title_colour = COLOURS_MENU_TITLE_FUNCTION
-    else:
-        title_colour = COLOURS_MENU_TITLE_ITEM
+    if function: title_colour = COLOURS_MENU_TITLE_FUNCTION
+    else: title_colour = COLOURS_MENU_TITLE_ITEM
 
     if title:
         menu_header = (' ' * (box_left
@@ -227,7 +224,6 @@ def generate_menu_line_item(index, text, show_favorite = False):
             + COLOUR_RESET
 
 def generate_menu_line_option(char, text):
-
     return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
             + '(' + allowed_option_key(char) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
             + (' ' * MENU_ITEM_GAP) + text\
@@ -235,11 +231,9 @@ def generate_menu_line_option(char, text):
             + (' ' * len(MENU_ITEM_FAVORITE)) + (' ' * MENU_ITEM_TAIL) + '│' + COLOUR_RESET
 
 def generate_menu_prompt():
-
     return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'select:' + COLOUR_RESET + ' '
 
 def generate_search_prompt():
-
     return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'enter text to search for: '\
             + COLOUR_RESET + ' '
 
@@ -255,11 +249,9 @@ def longest_column_entry(entries, name):
     return current_length
 
 def calc_line_item_width(index, text):
-
     return len(str(index) + text)
 
 def calc_title_length(title):
-
     length = len(title) + BOX_TITLE_CHARS_LENGTH + (TITLE_SPACING * 2)
     if BOX_POSITION != 'center': length += BOX_TITLE_INDENT
 
@@ -276,11 +268,9 @@ def calc_box_left():
         return (columns // 2) - (box_width // 2)
 
 def allowed_item_key(text):
-
     return COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG + text + COLOUR_RESET
 
 def allowed_option_key(text):
-
     return COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG + text + COLOUR_RESET
 
 def get_db_categories():
@@ -457,7 +447,6 @@ def generate_field_screen(name, value, columns):
     return name_line + value_line
 
 def generate_field_file(name, value):
-
     return name + ':\n' + value + '\n'
 
 def write_entry_to_file(entry_name, entry_fields):
@@ -517,8 +506,7 @@ def check_opts(argv):
     return 0
 
 def db_exists():
-    if os.path.exists(database_pathfile):
-        return True
+    if os.path.exists(database_pathfile): return True
     else:
         print('\n! File not found! [{}]'.format(database_pathfile))
         return False
@@ -537,6 +525,7 @@ def main(argv):
         if current_menu == 'categories':
             reset_display()
             category_menu_index = draw_menu('categories', all_categories, 'category_name', 'SF')
+            category_row = all_categories[category_menu_index - 1]
             menu_stack.append(current_menu)
 
             if category_menu_index == -2:
@@ -548,11 +537,11 @@ def main(argv):
                 current_menu = 'entries'
 
         if current_menu == 'entries':
-            category_row = all_categories[int(category_menu_index) - 1]
             category_entries = get_db_entries_from_category(category_row['category_id'])
             reset_display()
             entry_menu_index = draw_menu(category_row['category_name'], category_entries,
                                         'entry_name', 'SBFM')
+            entry_row = category_entries[entry_menu_index - 1]
 
             if entry_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -566,17 +555,14 @@ def main(argv):
                 menu_stack = []
                 current_menu = 'categories'
             else:
-                entry_row = category_entries[int(entry_menu_index) - 1]
                 menu_stack.append(current_menu)
                 current_menu = 'fields'
 
         if current_menu == 'search':
             try:
                 search_text = input(generate_search_prompt())
-                if search_text:
-                    current_menu = 'search results'
-                else:
-                    print()
+                if search_text: current_menu = 'search results'
+                else: print()
             except KeyboardInterrupt:
                 current_menu = menu_stack.pop()
 
@@ -585,6 +571,7 @@ def main(argv):
             reset_display()
             search_menu_index = draw_menu('Search results for \"' + search_text + '\"',
                                             search_entries, 'entry_name', 'BMF', None, True)
+            entry_row = search_entries[search_menu_index - 1]
 
             if search_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -595,7 +582,6 @@ def main(argv):
                 menu_stack = []
                 current_menu = 'categories'
             else:
-                entry_row = search_entries[int(search_menu_index) - 1]
                 menu_stack.append(current_menu)
                 current_menu = 'fields'
 
@@ -604,6 +590,7 @@ def main(argv):
             reset_display()
             favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BMS',
                                             None, True)
+            entry_row = favorites_entries[favorite_menu_index - 1]
 
             if favorite_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -614,14 +601,13 @@ def main(argv):
                 menu_stack = []
                 current_menu = 'categories'
             else:
-                entry_row = favorites_entries[int(favorite_menu_index) - 1]
                 menu_stack.append(current_menu)
                 current_menu = 'fields'
 
         if current_menu == 'fields':
-            content = generate_single_entry_screen(entry_row['entry_name'],
-                        get_db_fields_from_entry(entry_row['entry_id']),
-                        entry_row['favorite'])
+            entry_name = entry_row['entry_name']
+            entry_fields = get_db_fields_from_entry(entry_row['entry_id'])
+            content = generate_single_entry_screen(entry_name, entry_fields, entry_row['favorite'])
 
             reset_display()
             print(content + '\n')
