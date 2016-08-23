@@ -470,13 +470,13 @@ def generate_field_file(name, value):
     return name + ':\n' + value + '\n'
 
 
-def write_entry_to_file(entry_name, entry_fields):
-    output_pathfile = entry_name.replace(' ', '_').replace('/', '_').replace('\\', '_').\
+def write_fields_to_file(filename, fields):
+    target_pathfile = filename.replace(' ', '_').replace('/', '_').replace('\\', '_').\
                         replace('?', '_') + '.txt'
-    content = generate_single_entry_file(entry_fields)
+    content = generate_single_entry_file(fields)
 
-    if not os.path.exists(output_pathfile):
-        with open(output_pathfile, 'w') as text_file:
+    if not os.path.exists(target_pathfile):
+        with open(target_pathfile, 'w') as text_file:
             text_file.write(content)
 
         print((' ' * (box_left + PROMPT_INDENT)) + "* {} *\n".\
@@ -506,7 +506,7 @@ def show_help():
 
 
 def what_are_my_options(argv):
-    input_pathfile = ''
+    input_pathfile = None
 
     try:
         opts, args = getopt.getopt(argv,'hvi:',['help','version','input-file='])
@@ -536,6 +536,7 @@ def main(argv):
     database_pathfile = what_are_my_options(argv)
     if not os.path.exists(database_pathfile):
         print('\n! File not found! [{}]'.format(database_pathfile))
+        sys.exit()
 
     all_categories = get_db_categories()
     menu_stack = []
@@ -642,7 +643,7 @@ def main(argv):
                     current_menu = menu_stack.pop()
                     break
                 elif fields_menu_index == -1:
-                    write_entry_to_file(entry_name, entry_fields)
+                    write_fields_to_file(entry_name, entry_fields)
                     prompt_only = True
                 elif fields_menu_index == -4:
                     menu_stack = []
