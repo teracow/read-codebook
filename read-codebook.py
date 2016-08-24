@@ -25,44 +25,12 @@ import os
 import sys
 import getopt
 import sqlite3 as lite
+import colour_scheme as scheme
 
 SCRIPT_FILE = os.path.basename(sys.argv[0])
-SCRIPT_DATE = '2016-08-23'
+SCRIPT_DATE = '2016-08-25'
 
-# text colours
-COLOUR_WHITE_FG = '\033[97m'
-COLOUR_LIGHT_FG = '\033[38;5;250m'
-COLOUR_YELLOW_FG = '\033[33;40m'
-COLOUR_GREEN_FG = '\033[32;40m'
-COLOUR_RED_FG = '\033[31;40m'
-COLOUR_GREY_FG = '\033[38;5;246m'
-COLOUR_ORANGE_FG = '\033[38;5;214m'
-
-# background colours
-COLOUR_DARK_GREY_BG = '\033[48;5;234m'
-
-# colour modifiers
-COLOUR_BOLD = '\033[1m'
-COLOUR_RESET = '\033[0m'
-
-# colour scheme
-COLOURS_MENU_BOX = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
-COLOURS_MENU_TITLE_REGULAR = COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
-COLOURS_MENU_TITLE_SPECIAL = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
-COLOURS_MENU_ITEM = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
-COLOURS_SINGLE_ENTRY_BOX = COLOUR_GREY_FG + COLOUR_DARK_GREY_BG
-COLOURS_SINGLE_ENTRY_TITLE = COLOUR_WHITE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
-COLOURS_SINGLE_ENTRY_HEADER = COLOUR_GREY_FG + COLOUR_DARK_GREY_BG
-COLOURS_SINGLE_ENTRY_NAME = COLOUR_LIGHT_FG + COLOUR_DARK_GREY_BG
-COLOURS_SINGLE_ENTRY_VALUE = COLOUR_ORANGE_FG + COLOUR_DARK_GREY_BG
-COLOURS_PROMPT = COLOUR_LIGHT_FG + COLOUR_BOLD
-COLOURS_ALLOWED_ITEM_KEY = COLOUR_ORANGE_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
-COLOURS_ALLOWED_OPTION_KEY = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
-COLOURS_FAVORITE_STAR = COLOUR_YELLOW_FG + COLOUR_BOLD + COLOUR_DARK_GREY_BG
-COLOURS_WRITE_OK = COLOUR_GREEN_FG + COLOUR_BOLD
-COLOURS_WRITE_FAIL = COLOUR_RED_FG + COLOUR_BOLD
-
-#BOX_POSITION = 'left'           # left of screen
+BOX_POSITION = 'left'           # left of screen
 BOX_POSITION = 'center'         # center of screen
 #BOX_POSITION = 'right'          # right of screen
 BOX_INDENT = 1                  # space from side of screen to box
@@ -86,15 +54,16 @@ BOX_FOOTER_CHARS_LENGTH = 2     # left corner, right corner
 MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + (len(MENU_ITEM_FAVORITE))\
                     + MENU_ITEM_TAIL + BOX_VERTICAL_CHARS_LENGTH
 
-SCRIPT_DETAILS = '{} ({})'.format(COLOUR_LIGHT_FG + COLOUR_BOLD + SCRIPT_FILE + COLOUR_RESET,
-                                    SCRIPT_DATE)
+SCRIPT_DETAILS = '{} ({})'.format(scheme.COLOUR_LIGHT_FG + scheme.COLOUR_BOLD + SCRIPT_FILE
+                                    + scheme.COLOUR_RESET, SCRIPT_DATE)
 
 DATABASE = None
 
+
 def draw_menu(title, table, column, options, prompt_only = False, special = False):
     # if prompt_only is True    : don't show menu box and items, only show prompt line
-    # if special is True        : menu title colour will be COLOURS_MENU_TITLE_SPECIAL
-    # if special is False       : menu title colour will be COLOURS_MENU_TITLE_REGULAR
+    # if special is True        : menu title colour will be scheme.COLOURS_MENU_TITLE_SPECIAL
+    # if special is False       : menu title colour will be scheme.COLOURS_MENU_TITLE_REGULAR
 
     global box_width, box_left
 
@@ -181,8 +150,8 @@ def draw_menu(title, table, column, options, prompt_only = False, special = Fals
 def generate_menu_lines(title, special = False):
     title_length = calc_title_length(title)
 
-    if special: title_colour = COLOURS_MENU_TITLE_SPECIAL
-    else: title_colour = COLOURS_MENU_TITLE_REGULAR
+    if special: title_colour = scheme.COLOURS_MENU_TITLE_SPECIAL
+    else: title_colour = scheme.COLOURS_MENU_TITLE_REGULAR
 
     if title:
         menu_header = (' ' * (box_left + ((box_width // 2)
@@ -191,58 +160,68 @@ def generate_menu_lines(title, special = False):
 
         if BOX_POSITION == 'center':
             title_padding = (box_width - title_length) // 2
-            menu_header += (' ' * box_left) + COLOURS_MENU_BOX + '◤' + ('─' * title_padding)\
-                            + '┤' + (' ' * TITLE_SPACING) + title_colour + title + COLOUR_RESET\
-                            + COLOURS_MENU_BOX + (' ' * TITLE_SPACING) + '├'\
-                            + ('─' * (box_width - title_length - title_padding)) + '┐'\
-                            + COLOUR_RESET
+            header_template = (' ' * box_left) + '{}◤' + ('─' * title_padding) + '┤'\
+                            + (' ' * TITLE_SPACING) + '{}' + title + (' ' * TITLE_SPACING)\
+                            + '{}├' + ('─' * (box_width - title_length - title_padding)) + '┐{}'
         else:
-            menu_header += (' ' * box_left) + COLOURS_MENU_BOX + '◤' + ('─' * BOX_TITLE_INDENT)\
-                            + '┤' + (' ' * TITLE_SPACING) + title_colour + title + COLOUR_RESET\
-                            + COLOURS_MENU_BOX + (' ' * TITLE_SPACING) + '├'\
-                            + ('─' * (box_width - title_length)) + '┐'\
-                            + COLOUR_RESET
+            header_template = (' ' * box_left) + '{}◤' + ('─' * BOX_TITLE_INDENT) + '┤'\
+                            + (' ' * TITLE_SPACING) + '{}' + title + (' ' * TITLE_SPACING)\
+                            + '{}├' + ('─' * (box_width - title_length)) + '┐{}'
 
-        menu_separator = (' ' * box_left) + COLOURS_MENU_BOX + '├'\
-                        + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┤' + COLOUR_RESET
+        menu_header += header_template.format(scheme.COLOURS_MENU_BOX, title_colour,
+                        scheme.COLOUR_RESET + scheme.COLOURS_MENU_BOX, scheme.COLOUR_RESET)
+        separator_template = (' ' * box_left) + '{}├'\
+                                + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┤{}'
+        menu_separator = separator_template.format(scheme.COLOURS_MENU_BOX, scheme.COLOUR_RESET)
     else:
-        menu_header = (' ' * box_left) + COLOURS_MENU_BOX + '◤'\
-                        + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┐' + COLOUR_RESET
+        header_template = (' ' * box_left) + '{}◤'\
+                            + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '┐{}'
+        menu_header = header_template.format(scheme.COLOURS_MENU_BOX, scheme.COLOUR_RESET)
         menu_separator = ''
 
-    menu_footer = (' ' * box_left) + COLOURS_MENU_BOX + '└'\
-                        + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH)) + '◢' + COLOUR_RESET
+    footer_template = (' ' * box_left) + '{}└' + ('─' * (box_width - BOX_VERTICAL_CHARS_LENGTH))\
+                    + '◢{}'
+    menu_footer = footer_template.format(scheme.COLOURS_MENU_BOX, scheme.COLOUR_RESET)
 
     return menu_header, menu_separator, menu_footer
 
 
 def generate_menu_line_item(index, text, show_favorite = False):
-    if show_favorite: line_favorite = COLOURS_FAVORITE_STAR + MENU_ITEM_FAVORITE
+    if show_favorite: line_favorite = scheme.COLOURS_FAVORITE_STAR + MENU_ITEM_FAVORITE
     else: line_favorite = (' ' * len(MENU_ITEM_FAVORITE))
 
-    return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
-            + '(' + COLOURS_ALLOWED_ITEM_KEY + str(index) + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
-            + (' ' * MENU_ITEM_GAP) + COLOURS_MENU_ITEM + text\
-            + (' ' * (box_width - calc_line_item_width(index, text) - MENU_ROW_MIN_LENGTH))\
-            + line_favorite + (' ' * MENU_ITEM_TAIL) + COLOUR_RESET + COLOURS_MENU_BOX + '│'\
-            + COLOUR_RESET
+    template = (' ' * box_left) + '{}│' + (' ' * MENU_ITEM_INDENT) + '({}' + str(index)\
+                    + '{})' + (' ' * MENU_ITEM_GAP) + '{}' + text\
+                    + (' ' * (box_width - calc_line_item_width(index, text)\
+                    - MENU_ROW_MIN_LENGTH)) + line_favorite + (' ' * MENU_ITEM_TAIL)\
+                    + scheme.COLOUR_RESET + scheme.COLOURS_MENU_BOX + '{}│{}'
+
+    return template.format(scheme.COLOURS_MENU_BOX, scheme.COLOURS_ALLOWED_ITEM_KEY,
+                                scheme.COLOUR_RESET + scheme.COLOURS_MENU_BOX,
+                                scheme.COLOURS_MENU_ITEM, scheme.COLOUR_RESET
+                                + scheme.COLOURS_MENU_BOX, scheme.COLOUR_RESET)
 
 
 def generate_menu_line_option(char, text):
-    return (' ' * box_left) + COLOURS_MENU_BOX + '│' + (' ' * MENU_ITEM_INDENT)\
-            + '(' + COLOURS_ALLOWED_OPTION_KEY + char + COLOUR_RESET + COLOURS_MENU_BOX + ')'\
-            + (' ' * MENU_ITEM_GAP) + text\
-            + (' ' * (box_width - calc_line_item_width(char, text) - MENU_ROW_MIN_LENGTH))\
-            + (' ' * len(MENU_ITEM_FAVORITE)) + (' ' * MENU_ITEM_TAIL) + '│' + COLOUR_RESET
+    template = (' ' * box_left) + '{}│' + (' ' * MENU_ITEM_INDENT) + '({}' + char + '{})'\
+            + (' ' * MENU_ITEM_GAP) + text + (' ' * (box_width - calc_line_item_width(char, text)\
+            - MENU_ROW_MIN_LENGTH)) + (' ' * len(MENU_ITEM_FAVORITE)) + (' ' * MENU_ITEM_TAIL)\
+            + '│{}'
+
+    return template.format(scheme.COLOURS_MENU_BOX, scheme.COLOURS_ALLOWED_OPTION_KEY,
+            scheme.COLOUR_RESET + scheme.COLOURS_MENU_BOX, scheme.COLOUR_RESET)
 
 
 def generate_menu_prompt():
-    return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'select:' + COLOUR_RESET + ' '
+    template = (' ' * (box_left + PROMPT_INDENT)) + '{}select:{} '
+    
+    return template.format(scheme.COLOURS_PROMPT, scheme.COLOUR_RESET)
 
 
 def generate_search_prompt():
-    return (' ' * (box_left + PROMPT_INDENT)) + COLOURS_PROMPT + 'enter text to search for: '\
-            + COLOUR_RESET + ' '
+    template = (' ' * (box_left + PROMPT_INDENT)) + '{}enter text to search for:{} '
+
+    return template.format(scheme.COLOURS_PROMPT, scheme.COLOUR_RESET)
 
 
 def longest_column_entry(entries, name):
@@ -375,25 +354,24 @@ def generate_single_entry_screen(title, fields, favorite = False):
 
     if favorite:
         title_length = calc_title_length(title + ENTRY_NAME_FAVORITE)
-        title += COLOURS_FAVORITE_STAR + ENTRY_NAME_FAVORITE
+        title += scheme.COLOURS_FAVORITE_STAR + ENTRY_NAME_FAVORITE
     else:
         title_length = calc_title_length(title)
 
     if BOX_POSITION == 'center':
         title_padding = (columns - title_length) // 2
-        header = (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '◤' + ('═' * title_padding)\
-                    + '╡' + (' ' * TITLE_SPACING) + COLOURS_SINGLE_ENTRY_TITLE + title\
-                    + COLOUR_RESET + COLOURS_SINGLE_ENTRY_BOX + (' ' * TITLE_SPACING) + '╞'\
-                    + ('═' * (columns - (BOX_INDENT * 2) - title_length - title_padding)) + '╗'\
-                    + COLOUR_RESET + '\n'
-
+        template_header = (' ' * BOX_INDENT) + '{}◤' + ('═' * title_padding) + '╡'\
+                    + (' ' * TITLE_SPACING) + '{}' + title + '{}' + (' ' * TITLE_SPACING) + '╞'\
+                    + ('═' * (columns - (BOX_INDENT * 2) - title_length - title_padding)) + '╗{}\n'
     else:
-        header = (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '◤' + ('═' * BOX_TITLE_INDENT)\
-                    + '╡' + (' ' * TITLE_SPACING) + COLOURS_SINGLE_ENTRY_TITLE + title\
-                    + COLOUR_RESET + COLOURS_SINGLE_ENTRY_BOX + (' ' * TITLE_SPACING) + '╞'\
-                    + ('═' * (columns - (BOX_INDENT * 2) - title_length)) + '╗'\
-                    + COLOUR_RESET + '\n'
+        template_header = (' ' * BOX_INDENT) + '{}◤' + ('═' * BOX_TITLE_INDENT) + '╡'\
+                    + (' ' * TITLE_SPACING) + '{}' + title + '{}' + (' ' * TITLE_SPACING) + '╞'\
+                    + ('═' * (columns - (BOX_INDENT * 2) - title_length)) + '╗{}\n'
 
+    header = template_header.format(scheme.COLOURS_SINGLE_ENTRY_BOX,
+                                        scheme.COLOURS_SINGLE_ENTRY_TITLE,
+                                        scheme.COLOUR_RESET + scheme.COLOURS_SINGLE_ENTRY_BOX,
+                                        scheme.COLOUR_RESET)
     content = ''
 
     for field in fields:
@@ -403,9 +381,9 @@ def generate_single_entry_screen(title, fields, favorite = False):
         else:
             content += generate_field_screen(field['field_name'], field['value'], columns)
 
-    footer = (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '╚'\
-                + ('═' * (columns - BOX_FOOTER_CHARS_LENGTH - BOX_INDENT - BOX_INDENT)) + '◢'\
-                + COLOUR_RESET
+    template_footer = (' ' * BOX_INDENT) + '{}╚'\
+                + ('═' * (columns - BOX_FOOTER_CHARS_LENGTH - BOX_INDENT - BOX_INDENT)) + '◢{}'
+    footer = template_footer.format(scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
 
     return header + content + footer
 
@@ -425,20 +403,23 @@ def generate_single_entry_file(fields):
 def generate_note_screen(name, value, columns):
     name += ':'
     name_min_length = len(name) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_NAME_INDENT
-    name_line = (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '║' + (' ' * ENTRY_NAME_INDENT)\
-                + COLOURS_SINGLE_ENTRY_NAME + name\
-                + (' ' * (columns - BOX_INDENT - name_min_length - BOX_INDENT))\
-                + COLOURS_SINGLE_ENTRY_BOX + '║' + COLOUR_RESET + '\n'
-
+    template_name_line = (' ' * BOX_INDENT) + '{}║' + (' ' * ENTRY_NAME_INDENT) + '{}' + name\
+                    + (' ' * (columns - BOX_INDENT - name_min_length - BOX_INDENT)) + '{}║{}\n'
+    name_line = template_name_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX,
+                                    scheme.COLOURS_SINGLE_ENTRY_NAME,
+                                    scheme.COLOURS_SINGLE_ENTRY_BOX,
+                                    scheme.COLOUR_RESET)
     value_line = ''
 
     for line in value.splitlines():
         line_min_length = len(line) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_VALUE_INDENT
-
-        value_line += (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '║'\
-                        + (' ' * ENTRY_VALUE_INDENT) + COLOURS_SINGLE_ENTRY_VALUE + line\
-                        + (' ' * (columns - BOX_INDENT - line_min_length - BOX_INDENT))\
-                        + COLOURS_SINGLE_ENTRY_BOX + '║' + COLOUR_RESET + '\n'
+        template_value_line = (' ' * BOX_INDENT) + '{}║' + (' ' * ENTRY_VALUE_INDENT)\
+                        + '{}' + line + (' ' * (columns - BOX_INDENT - line_min_length\
+                        - BOX_INDENT)) + '{}║{}\n'
+        value_line += template_value_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX,
+                                            scheme.COLOURS_SINGLE_ENTRY_VALUE,
+                                            scheme.COLOURS_SINGLE_ENTRY_BOX,
+                                            scheme.COLOUR_RESET)
 
     return name_line + value_line
 
@@ -447,16 +428,17 @@ def generate_field_screen(name, value, columns):
     name += ':'
     name_min_length = len(name) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_NAME_INDENT
     value_min_length = len(value) + BOX_VERTICAL_CHARS_LENGTH + ENTRY_VALUE_INDENT
-
-    name_line = (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '║' + (' ' * ENTRY_NAME_INDENT)\
-                + COLOURS_SINGLE_ENTRY_NAME + name + (' ' * (columns - BOX_INDENT\
-                - name_min_length - BOX_INDENT)) + COLOURS_SINGLE_ENTRY_BOX + '║' + COLOUR_RESET\
-                + '\n'
-
-    value_line = (' ' * BOX_INDENT) + COLOURS_SINGLE_ENTRY_BOX + '║' + (' ' * ENTRY_VALUE_INDENT)\
-                + COLOURS_SINGLE_ENTRY_VALUE + value + (' ' * (columns - BOX_INDENT\
-                - value_min_length - BOX_INDENT)) + COLOURS_SINGLE_ENTRY_BOX + '║' + COLOUR_RESET\
-                + '\n'
+    template_name_line = (' ' * BOX_INDENT) + '{}║' + (' ' * ENTRY_NAME_INDENT) + '{}' + name\
+                        + (' ' * (columns - BOX_INDENT - name_min_length - BOX_INDENT)) + '{}║{}\n'
+    name_line = template_name_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX,
+                                    scheme.COLOURS_SINGLE_ENTRY_NAME,
+                                    scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
+    template_value_line = (' ' * BOX_INDENT) + '{}║' + (' ' * ENTRY_VALUE_INDENT) + '{}' + value\
+                        + (' ' * (columns - BOX_INDENT - value_min_length - BOX_INDENT))\
+                        + '{}║{}\n'
+    value_line = template_value_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX,
+                                        scheme.COLOURS_SINGLE_ENTRY_VALUE,
+                                        scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
 
     return name_line + value_line
 
@@ -475,10 +457,11 @@ def write_fields_to_file(filename, fields):
             text_file.write(content)
 
         print((' ' * (box_left + PROMPT_INDENT)) + "* {} *\n".\
-                format(COLOURS_WRITE_OK + 'written to file' + COLOUR_RESET))
+                format(scheme.COLOURS_WRITE_OK + 'written to file' + scheme.COLOUR_RESET))
     else:
         print((' ' * (box_left + PROMPT_INDENT)) + "! {} !\n".\
-                format(COLOURS_WRITE_FAIL + 'did not write (file already exists)' + COLOUR_RESET))
+                format(scheme.COLOURS_WRITE_FAIL + 'did not write (file already exists)'
+                        + scheme.COLOUR_RESET))
 
     return
 
@@ -532,15 +515,14 @@ def main():
         if current_menu == 'categories':
             reset_display()
             category_menu_index = draw_menu('categories', all_categories, 'category_name', 'SF')
-            category_row = all_categories[category_menu_index - 1]
             menu_stack.append(current_menu)
 
             if category_menu_index == -2:
                 current_menu = 'search'
             elif category_menu_index == -3:
-                menu_stack.append(current_menu)
                 current_menu = 'favorites'
             else:
+                category_row = all_categories[category_menu_index - 1]
                 current_menu = 'entries'
 
         if current_menu == 'entries':
@@ -548,7 +530,6 @@ def main():
             reset_display()
             entry_menu_index = draw_menu(category_row['category_name'], category_entries,
                                         'entry_name', 'SBFM')
-            entry_row = category_entries[entry_menu_index - 1]
 
             if entry_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -563,6 +544,7 @@ def main():
                 current_menu = 'categories'
             else:
                 menu_stack.append(current_menu)
+                entry_row = category_entries[entry_menu_index - 1]
                 current_menu = 'fields'
 
         if current_menu == 'search':
@@ -579,7 +561,6 @@ def main():
             reset_display()
             search_menu_index = draw_menu('Search results for \"' + search_text + '\"',
                                             search_entries, 'entry_name', 'BMF', None, True)
-            entry_row = search_entries[search_menu_index - 1]
 
             if search_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -591,6 +572,7 @@ def main():
                 current_menu = 'categories'
             else:
                 menu_stack.append(current_menu)
+                entry_row = search_entries[search_menu_index - 1]
                 current_menu = 'fields'
 
         if current_menu == 'favorites':
@@ -598,7 +580,6 @@ def main():
             reset_display()
             favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BMS',
                                             None, True)
-            entry_row = favorites_entries[favorite_menu_index - 1]
 
             if favorite_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -610,6 +591,7 @@ def main():
                 current_menu = 'categories'
             else:
                 menu_stack.append(current_menu)
+                entry_row = favorites_entries[favorite_menu_index - 1]
                 current_menu = 'fields'
 
         if current_menu == 'fields':
@@ -636,11 +618,11 @@ def main():
                     current_menu = 'categories'
                     break
 
+
 if __name__ == '__main__':
     print(SCRIPT_DETAILS)
-
     DATABASE = what_are_my_options(sys.argv[1:])
     if not os.path.exists(DATABASE):
-        print('\n! File not found! [{}]'.format(DATABASE))
+        print('\n! Input file not found! [{}]'.format(DATABASE))
     else:
         main()
