@@ -54,8 +54,8 @@ BOX_FOOTER_CHARS_LENGTH = 2     # left corner, right corner
 MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + (len(MENU_ITEM_FAVORITE))\
                     + MENU_ITEM_TAIL + BOX_VERTICAL_CHARS_LENGTH
 
-SCRIPT_DETAILS = '{} ({})'.format(scheme.COLOUR_LIGHT_FG + scheme.COLOUR_BOLD + SCRIPT_FILE
-                                    + scheme.COLOUR_RESET, SCRIPT_DATE)
+SCRIPT_DETAILS = '{} ({})'.format(scheme.COLOUR_LIGHT_FG + scheme.COLOUR_BOLD + SCRIPT_FILE + scheme.COLOUR_RESET,
+                SCRIPT_DATE)
 
 DATABASE = None
 
@@ -219,7 +219,7 @@ def generate_search_prompt():
 
 
 def longest_column_entry(entries, name):
-    # checks the length of every row in column 'name' and returns the longest
+    # checks the length of every item in column 'name' and returns the longest
 
     current_length = 1
 
@@ -280,8 +280,7 @@ def get_db_entries_from_category(category_id):
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE category_id = ? ORDER BY entry_name COLLATE NOCASE',
-                    (category_id,))
+        cur.execute(base_sql + 'WHERE category_id = ? ORDER BY entry_name COLLATE NOCASE', (category_id,))
 
     return cur.fetchall()
 
@@ -321,8 +320,8 @@ def get_db_search(text):
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE value LIKE ? OR entry_name LIKE ? COLLATE NOCASE\
-                    GROUP BY entry_name ORDER BY entry_name', ('%' + text + '%', '%' + text + '%'))
+        cur.execute(base_sql + 'WHERE value LIKE ? OR entry_name LIKE ? COLLATE NOCASE GROUP BY entry_name\
+                    ORDER BY entry_name', ('%' + text + '%', '%' + text + '%'))
 
     return cur.fetchall()
 
@@ -365,7 +364,7 @@ def generate_single_entry_screen(title, fields, favorite = False):
     template_header = (' ' * BOX_INDENT) + '{}◤' + left_padding + '╡' + (' ' * TITLE_SPACING) + '{}' + title + '{}'\
                     + (' ' * TITLE_SPACING) + '╞' + right_padding + '╗{}\n'
     header = template_header.format(scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOURS_SINGLE_ENTRY_TITLE,
-                                    scheme.COLOUR_RESET + scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
+                scheme.COLOUR_RESET + scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
     content = ''
 
     for field in fields:
@@ -400,7 +399,7 @@ def generate_note_screen(name, value, columns):
     template_name_line = (' ' * BOX_INDENT) + '{}║' + (' ' * ENTRY_NAME_INDENT) + '{}' + name\
                         + (' ' * (columns - BOX_INDENT - name_min_length - BOX_INDENT)) + '{}║{}\n'
     name_line = template_name_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOURS_SINGLE_ENTRY_NAME,
-                                    scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
+                scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
     value_line = ''
 
     for line in value.splitlines():
@@ -408,7 +407,7 @@ def generate_note_screen(name, value, columns):
         template_value_line = (' ' * BOX_INDENT) + '{}║' + (' ' * ENTRY_VALUE_INDENT) + '{}' + line\
                             + (' ' * (columns - BOX_INDENT - line_min_length - BOX_INDENT)) + '{}║{}\n'
         value_line += template_value_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOURS_SINGLE_ENTRY_VALUE,
-                                            scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
+                        scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
 
     return name_line + value_line
 
@@ -420,12 +419,11 @@ def generate_field_screen(name, value, columns):
     template_name_line = (' ' * BOX_INDENT) + '{}║' + (' ' * ENTRY_NAME_INDENT) + '{}' + name\
                         + (' ' * (columns - BOX_INDENT - name_min_length - BOX_INDENT)) + '{}║{}\n'
     name_line = template_name_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOURS_SINGLE_ENTRY_NAME,
-                                    scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
+                scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
     template_value_line = (' ' * BOX_INDENT) + '{}║' + (' ' * ENTRY_VALUE_INDENT) + '{}' + value\
                         + (' ' * (columns - BOX_INDENT - value_min_length - BOX_INDENT)) + '{}║{}\n'
-    value_line = template_value_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX,
-                                        scheme.COLOURS_SINGLE_ENTRY_VALUE,
-                                        scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
+    value_line = template_value_line.format(scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOURS_SINGLE_ENTRY_VALUE,
+                    scheme.COLOURS_SINGLE_ENTRY_BOX, scheme.COLOUR_RESET)
 
     return name_line + value_line
 
@@ -442,8 +440,8 @@ def write_fields_to_file(filename, fields):
         with open(target_pathfile, 'w') as text_file:
             text_file.write(content)
 
-        print((' ' * (box_left + PROMPT_INDENT)) + "* {} *\n".format(scheme.COLOURS_WRITE_OK + 'written to file'
-                + scheme.COLOUR_RESET))
+        print((' ' * (box_left + PROMPT_INDENT)) + "* {} *\n".format(scheme.COLOURS_WRITE_OK
+                + 'written to file' + scheme.COLOUR_RESET))
     else:
         print((' ' * (box_left + PROMPT_INDENT)) + "! {} !\n".format(scheme.COLOURS_WRITE_FAIL
                 + 'did not write (file already exists)' + scheme.COLOUR_RESET))
