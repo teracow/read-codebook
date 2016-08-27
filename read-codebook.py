@@ -28,7 +28,7 @@ import sqlite3 as lite
 import colour_scheme as scheme
 
 SCRIPT_FILE = os.path.basename(sys.argv[0])
-SCRIPT_DATE = '2016-08-26'
+SCRIPT_DATE = '2016-08-27'
 
 #BOX_POSITION = 'left'           # left of screen
 BOX_POSITION = 'center'         # center of screen
@@ -65,20 +65,13 @@ def draw_menu(title, table, column, options, prompt_only = False, special = Fals
     # if special is True        : menu title colour will be scheme.COLOURS_MENU_TITLE_SPECIAL
     # if special is False       : menu title colour will be scheme.COLOURS_MENU_TITLE_REGULAR
 
-    global box_width, box_left
-
     total_items = len(table)
 
     if prompt_only: display_menu = False
     else:
         display_menu = True
-        box_width = 31      # minimum box width
-        line_length = longest_column_entry(table, column)
-        title_length = calc_title_length(title)
-        if (line_length + MENU_ROW_MIN_LENGTH) > box_width:
-            box_width = line_length + MENU_ROW_MIN_LENGTH
-        if title_length > box_width: box_width = title_length
-        box_left = calc_box_left()
+        recalc_box_width(title, table, column)
+        recalc_box_left()
         header, separator, footer = generate_menu_lines(title, special)
 
     while True:
@@ -241,41 +234,59 @@ def calc_title_length(title):
     return length
 
 
-def calc_box_left():
+def recalc_box_width(title, table, column):
+    global box_width
+    
+    box_width = 31      # minimum box width
+    line_length = longest_column_entry(table, column)
+    title_length = calc_title_length(title)
+
+    if (line_length + MENU_ROW_MIN_LENGTH) > box_width:
+        box_width = line_length + MENU_ROW_MIN_LENGTH
+    if title_length > box_width:
+        box_width = title_length
+    
+
+def recalc_box_left():
+    global box_left
+
     if BOX_POSITION == 'left':
-        return BOX_INDENT
+        box_left = BOX_INDENT
     elif BOX_POSITION == 'right':
         rows, columns = get_screen_size()
-        return columns - BOX_INDENT - box_width
+        box_left = columns - BOX_INDENT - box_width
     else:
         rows, columns = get_screen_size()
-        return (columns // 2) - (box_width // 2)
+        box_left = (columns // 2) - (box_width // 2)
 
 
 def get_db_categories():
     con = lite.connect(DATABASE)
-    base_sql = 'SELECT  id          AS category_id,\
-                        name        AS category_name\
-                FROM categories '
-
+    base_sql = ('SELECT  '
+                'id AS category_id, '
+                'name AS category_name '
+                'FROM categories '
+                'ORDER BY category_name')
+                
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'ORDER BY category_name')
+        cur.execute(base_sql)
 
     return cur.fetchall()
 
 
 def get_db_entries_from_category(category_id):
     con = lite.connect(DATABASE)
-    base_sql = 'SELECT  categories.id       AS category_id,\
-                        categories.name     AS category_name,\
-                        entries.id          AS entry_id,\
-                        entries.name        AS entry_name,\
-                        entries.type        AS entry_type,\
-                        entries.is_favorite AS favorite\
-                FROM categories\
-                        JOIN entries        ON entries.category_id = categories.id '
+    base_sql = ('SELECT  '
+                'categories.id AS category_id, '
+                'categories.name AS category_name, '
+                'entries.id AS entry_id, '
+                'entries.name AS entry_name, '
+                'entries.type AS entry_type, '
+                'entries.is_favorite AS favorite '
+                'FROM categories '
+                'JOIN entries ON entries.category_id = categories.id ')
 
     with con:
         con.row_factory = lite.Row
@@ -287,16 +298,16 @@ def get_db_entries_from_category(category_id):
 
 def get_db_fields_from_entry(entry_id):
     con = lite.connect(DATABASE)
-    base_sql = 'SELECT  entry_id,\
-                        entries.name        AS entry_name,\
-                        entries.type        AS entry_type,\
-                        types.name          AS field_name,\
-                        fields.value,\
-                        fields.idx          AS field_index,\
-                        types.mode          AS data_type\
-                FROM entries\
-                        JOIN fields         ON fields.entry_id = entries.id\
-                LEFT    JOIN types          ON types.id = fields.type_id '
+    base_sql = ('SELECT entry_id, '
+                'entries.name AS entry_name, '
+                'entries.type AS entry_type, '
+                'types.name AS field_name, '
+                'fields.value, '
+                'fields.idx AS field_index, '
+                'types.mode AS data_type '
+                'FROM entries '
+                'JOIN fields ON fields.entry_id = entries.id '
+                'LEFT JOIN types ON types.id = fields.type_id ')
 
     with con:
         con.row_factory = lite.Row
@@ -308,14 +319,14 @@ def get_db_fields_from_entry(entry_id):
 
 def get_db_search(text):
     con = lite.connect(DATABASE)
-    base_sql = 'SELECT  entries.id          AS entry_id,\
-                        entries.name        AS entry_name,\
-                        entries.type        AS entry_type,\
-                        entries.is_favorite AS favorite,\
-                        fields.value\
-                FROM entries\
-                        JOIN fields         ON fields.entry_id = entries.id\
-                LEFT    JOIN types          ON types.id = fields.type_id '
+    base_sql = ('SELECT entries.id AS entry_id, '
+                'entries.name AS entry_name, '
+                'entries.type AS entry_type, '
+                'entries.is_favorite AS favorite, '
+                'fields.value '
+                'FROM entries '
+                'JOIN fields ON fields.entry_id = entries.id '
+                'LEFT JOIN types ON types.id = fields.type_id ')
 
     with con:
         con.row_factory = lite.Row
@@ -328,16 +339,16 @@ def get_db_search(text):
 
 def get_db_favorites():
     con = lite.connect(DATABASE)
-    base_sql = 'SELECT  entries.id          AS entry_id,\
-                        entries.name        AS entry_name,\
-                        entries.type        AS entry_type,\
-                        entries.is_favorite AS favorite\
-                FROM entries '
-
+    base_sql = ('SELECT entries.id AS entry_id, '
+                'entries.name AS entry_name, '
+                'entries.type AS entry_type, '
+                'entries.is_favorite AS favorite '
+                'FROM entries '
+                'WHERE favorite = 1 ORDER BY entry_name COLLATE NOCASE')
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
-        cur.execute(base_sql + 'WHERE favorite = 1 ORDER BY entry_name COLLATE NOCASE')
+        cur.execute(base_sql)
 
     return cur.fetchall()
 
