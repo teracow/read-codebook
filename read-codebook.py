@@ -8,16 +8,15 @@
 
 # Copyright (C) 2016 Teracow Software
 
-# This program is free software: you can redistribute it and/or modify it under the terms of the
-#   GNU General Public License as published by the Free Software Foundation, either version 3 of
-#   the License, or (at your option) any later version.
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
+#  later version.
 
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
-#   even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-#   General Public License for more details.
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+#  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
-# You should have received a copy of the GNU General Public License along with this program. If
-#   not, see http://www.gnu.org/licenses/.
+# You should have received a copy of the GNU General Public License along with this program. If not,
+#  see http://www.gnu.org/licenses/.
 
 # If you find this code useful, please let me know. :) teracow@gmail.com
 
@@ -51,8 +50,8 @@ BOX_TITLE_CHARS_LENGTH = 4      # left corner, title bookends, right corner
 BOX_VERTICAL_CHARS_LENGTH = 2   # upright lines
 BOX_FOOTER_CHARS_LENGTH = 2     # left corner, right corner
 
-MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + (len(MENU_ITEM_FAVORITE))\
-                    + MENU_ITEM_TAIL + BOX_VERTICAL_CHARS_LENGTH
+MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + (len(MENU_ITEM_FAVORITE)) + MENU_ITEM_TAIL\
+                    + BOX_VERTICAL_CHARS_LENGTH
 
 SCRIPT_DETAILS = '{} ({})'.format(scheme.COLOUR_LIGHT_FG + scheme.COLOUR_BOLD + SCRIPT_FILE + scheme.COLOUR_RESET,
                 SCRIPT_DATE)
@@ -70,8 +69,7 @@ def draw_menu(title, table, column, options, prompt_only = False, special = Fals
     if prompt_only: display_menu = False
     else:
         display_menu = True
-        recalc_box_width(title, table, column)
-        recalc_box_left()
+        recalc_box_size_and_position(title, table, column)
         header, separator, footer = generate_menu_lines(title, special)
 
     while True:
@@ -234,9 +232,9 @@ def calc_title_length(title):
     return length
 
 
-def recalc_box_width(title, table, column):
-    global box_width
-    
+def recalc_box_size_and_position(title, table, column):
+    global box_width, box_left
+
     box_width = 31      # minimum box width
     line_length = longest_column_entry(table, column)
     title_length = calc_title_length(title)
@@ -245,10 +243,6 @@ def recalc_box_width(title, table, column):
         box_width = line_length + MENU_ROW_MIN_LENGTH
     if title_length > box_width:
         box_width = title_length
-    
-
-def recalc_box_left():
-    global box_left
 
     if BOX_POSITION == 'left':
         box_left = BOX_INDENT
@@ -267,7 +261,7 @@ def get_db_categories():
                 'name AS category_name '
                 'FROM categories '
                 'ORDER BY category_name')
-                
+
     with con:
         con.row_factory = lite.Row
         cur = con.cursor()
@@ -446,16 +440,19 @@ def generate_field_file(name, value):
 def write_fields_to_file(filename, fields):
     target_pathfile = filename.replace(' ', '_').replace('/', '_').replace('\\', '_').replace('?', '_') + '.txt'
     content = generate_single_entry_file(fields)
+    template = (' ' * (box_left + PROMPT_INDENT)) + '{} {} {}\n'
 
     if not os.path.exists(target_pathfile):
         with open(target_pathfile, 'w') as text_file:
             text_file.write(content)
 
-        print((' ' * (box_left + PROMPT_INDENT)) + "* {} *\n".format(scheme.COLOURS_WRITE_OK
-                + 'written to file' + scheme.COLOUR_RESET))
+        marker = "*"
+        message = scheme.COLOURS_WRITE_OK + 'written to file' + scheme.COLOUR_RESET
     else:
-        print((' ' * (box_left + PROMPT_INDENT)) + "! {} !\n".format(scheme.COLOURS_WRITE_FAIL
-                + 'did not write (file already exists)' + scheme.COLOUR_RESET))
+        marker = "!"
+        message = scheme.COLOURS_WRITE_FAIL + 'did not write (file already exists)' + scheme.COLOUR_RESET
+
+    print(template.format(marker, message, marker))
 
     return
 
