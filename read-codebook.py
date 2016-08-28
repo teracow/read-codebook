@@ -27,7 +27,7 @@ import sqlite3 as lite
 import colour_scheme as scheme
 
 SCRIPT_FILE = os.path.basename(sys.argv[0])
-SCRIPT_DATE = '2016-08-27'
+SCRIPT_DATE = '2016-08-28'
 
 #BOX_POSITION = 'left'           # left of screen
 BOX_POSITION = 'center'         # center of screen
@@ -55,8 +55,6 @@ MENU_ROW_MIN_LENGTH = MENU_ITEM_INDENT + 2 + MENU_ITEM_GAP + (len(MENU_ITEM_FAVO
 
 SCRIPT_DETAILS = '{} ({})'.format(scheme.COLOUR_LIGHT_FG + scheme.COLOUR_BOLD + SCRIPT_FILE + scheme.COLOUR_RESET,
                 SCRIPT_DATE)
-
-DATABASE = None
 
 
 def draw_menu(title, table, column, options, prompt_only = False, special = False):
@@ -255,23 +253,16 @@ def recalc_box_size_and_position(title, table, column):
 
 
 def get_db_categories():
-    con = lite.connect(DATABASE)
     base_sql = ('SELECT  '
                 'id AS category_id, '
                 'name AS category_name '
                 'FROM categories '
                 'ORDER BY category_name')
 
-    with con:
-        con.row_factory = lite.Row
-        cur = con.cursor()
-        cur.execute(base_sql)
-
-    return cur.fetchall()
+    return SOURCE_DB.cursor().execute(base_sql).fetchall()
 
 
 def get_db_entries_from_category(category_id):
-    con = lite.connect(DATABASE)
     base_sql = ('SELECT  '
                 'categories.id AS category_id, '
                 'categories.name AS category_name, '
@@ -282,16 +273,11 @@ def get_db_entries_from_category(category_id):
                 'FROM categories '
                 'JOIN entries ON entries.category_id = categories.id ')
 
-    with con:
-        con.row_factory = lite.Row
-        cur = con.cursor()
-        cur.execute(base_sql + 'WHERE category_id = ? ORDER BY entry_name COLLATE NOCASE', (category_id,))
-
-    return cur.fetchall()
+    return SOURCE_DB.cursor().execute(base_sql + 'WHERE category_id = ? ORDER BY entry_name COLLATE NOCASE',
+            (category_id,)).fetchall()
 
 
 def get_db_fields_from_entry(entry_id):
-    con = lite.connect(DATABASE)
     base_sql = ('SELECT entry_id, '
                 'entries.name AS entry_name, '
                 'entries.type AS entry_type, '
@@ -303,16 +289,10 @@ def get_db_fields_from_entry(entry_id):
                 'JOIN fields ON fields.entry_id = entries.id '
                 'LEFT JOIN types ON types.id = fields.type_id ')
 
-    with con:
-        con.row_factory = lite.Row
-        cur = con.cursor()
-        cur.execute(base_sql + 'WHERE entry_id = ? ORDER BY field_index', (entry_id,))
-
-    return cur.fetchall()
+    return SOURCE_DB.cursor().execute(base_sql + 'WHERE entry_id = ? ORDER BY field_index', (entry_id,)).fetchall()
 
 
 def get_db_search(text):
-    con = lite.connect(DATABASE)
     base_sql = ('SELECT entries.id AS entry_id, '
                 'entries.name AS entry_name, '
                 'entries.type AS entry_type, '
@@ -322,30 +302,20 @@ def get_db_search(text):
                 'JOIN fields ON fields.entry_id = entries.id '
                 'LEFT JOIN types ON types.id = fields.type_id ')
 
-    with con:
-        con.row_factory = lite.Row
-        cur = con.cursor()
-        cur.execute(base_sql + 'WHERE value LIKE ? OR entry_name LIKE ? COLLATE NOCASE GROUP BY entry_name\
-                    ORDER BY entry_name', ('%' + text + '%', '%' + text + '%'))
-
-    return cur.fetchall()
+    return SOURCE_DB.cursor().execute(base_sql + 'WHERE value LIKE ? OR entry_name LIKE ? COLLATE NOCASE GROUP BY\
+            entry_name ORDER BY entry_name', ('%' + text + '%', '%' + text + '%')).fetchall()
 
 
 def get_db_favorites():
-    con = lite.connect(DATABASE)
     base_sql = ('SELECT entries.id AS entry_id, '
                 'entries.name AS entry_name, '
                 'entries.type AS entry_type, '
                 'entries.is_favorite AS favorite '
                 'FROM entries '
                 'WHERE favorite = 1 ORDER BY entry_name COLLATE NOCASE')
-    with con:
-        con.row_factory = lite.Row
-        cur = con.cursor()
-        cur.execute(base_sql)
 
-    return cur.fetchall()
-
+    return SOURCE_DB.cursor().execute(base_sql).fetchall()
+        
 
 def generate_single_entry_screen(title, fields, favorite = False):
     rows, columns = get_screen_size()
@@ -505,7 +475,7 @@ def main():
     while True:
         if current_menu == 'categories':
             reset_display()
-            category_menu_index = draw_menu('categories', all_categories, 'category_name', 'SF')
+            category_menu_index = draw_menu('categories', all_categories, 'category_name', 'FS')
             menu_stack.append(current_menu)
 
             if category_menu_index == -2:
@@ -517,9 +487,9 @@ def main():
                 current_menu = 'entries'
 
         if current_menu == 'entries':
-            category_entries = get_db_entries_from_category(category_row['category_id'])
             reset_display()
-            entry_menu_index = draw_menu(category_row['category_name'], category_entries, 'entry_name', 'SBFM')
+            category_entries = get_db_entries_from_category(category_row['category_id'])
+            entry_menu_index = draw_menu(category_row['category_name'], category_entries, 'entry_name', 'BFMS')
 
             if entry_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -547,10 +517,10 @@ def main():
                 else: print()
 
         if current_menu == 'search results':
-            search_entries = get_db_search(search_text)
             reset_display()
+            search_entries = get_db_search(search_text)
             search_menu_index = draw_menu('Search results for \"' + search_text + '\"', search_entries, 'entry_name',
-                                'BMF', None, True)
+                                'BFM', None, True)
 
             if search_menu_index == 0:
                 current_menu = menu_stack.pop()
@@ -566,8 +536,8 @@ def main():
                 current_menu = 'fields'
 
         if current_menu == 'favorites':
-            favorites_entries = get_db_favorites()
             reset_display()
+            favorites_entries = get_db_favorites()
             favorite_menu_index = draw_menu('Favorites', favorites_entries, 'entry_name', 'BMS', None, True)
 
             if favorite_menu_index == 0:
@@ -584,17 +554,17 @@ def main():
                 current_menu = 'fields'
 
         if current_menu == 'fields':
+            reset_display()
             entry_name = entry_row['entry_name']
             entry_fields = get_db_fields_from_entry(entry_row['entry_id'])
             content = generate_single_entry_screen(entry_name, entry_fields, entry_row['favorite'])
 
-            reset_display()
             print(content + '\n')
 
             prompt_only = False
 
             while True:
-                fields_menu_index = draw_menu('', '', '', 'BWM', prompt_only)
+                fields_menu_index = draw_menu('', '', '', 'BMW', prompt_only)
 
                 if fields_menu_index == 0:
                     current_menu = menu_stack.pop()
@@ -610,8 +580,11 @@ def main():
 
 if __name__ == '__main__':
     print(SCRIPT_DETAILS)
-    DATABASE = what_are_my_options(sys.argv[1:])
-    if not os.path.exists(DATABASE):
-        print('\n! Input file not found! [{}]'.format(DATABASE))
+    database_file = what_are_my_options(sys.argv[1:])
+
+    if not os.path.exists(database_file):
+        print('\n! Input file not found! [{}]'.format(database_file))
     else:
+        SOURCE_DB = lite.connect(database_file)
+        SOURCE_DB.row_factory = lite.Row
         main()
